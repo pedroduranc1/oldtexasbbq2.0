@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -15,7 +14,12 @@ export default function SeedPage() {
     productos: number;
     repartidores: number;
     errors: string[];
-  }>({ categorias: 0, productos: 0, repartidores: 0, errors: [] });
+  }>({
+    categorias: 0,
+    productos: 0,
+    repartidores: 0,
+    errors: [],
+  });
   const [completed, setCompleted] = useState(false);
 
   const categorias = [
@@ -61,12 +65,14 @@ export default function SeedPage() {
     // Hamburguesas
     {
       nombre: 'Texas Burger',
-      descripcion: 'Hamburguesa con tocino ahumado, queso cheddar y salsa BBQ',
+      descripcion:
+        'Hamburguesa con tocino ahumado, queso cheddar y salsa BBQ',
       precio: 120,
       categoriaId: '',
       categoriaNombre: 'Hamburguesas',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
       orden: 1,
       personalizaciones: {
         salsas: ['BBQ', 'Picante', 'Ranch'],
@@ -83,7 +89,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Hamburguesas',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400',
       orden: 2,
       personalizaciones: {
         salsas: ['BBQ', 'Chipotle', 'Miel Mostaza'],
@@ -119,7 +126,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Costillas',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1544025162-d76694265947?w=400',
       orden: 4,
       personalizaciones: {
         salsas: ['BBQ', 'Picante', 'Miel Mostaza'],
@@ -136,7 +144,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Costillas',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400',
       orden: 5,
       personalizaciones: {
         salsas: ['Habanero', 'Chipotle', 'Picante'],
@@ -154,7 +163,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Bebidas',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400',
       orden: 6,
       personalizaciones: {
         salsas: [],
@@ -171,7 +181,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Bebidas',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400',
       orden: 7,
       personalizaciones: {
         salsas: [],
@@ -189,7 +200,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Guarniciones',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400',
       orden: 8,
       personalizaciones: {
         salsas: ['BBQ', 'Ranch', 'Chipotle'],
@@ -206,7 +218,8 @@ export default function SeedPage() {
       categoriaId: '',
       categoriaNombre: 'Guarniciones',
       disponible: true,
-      imagen: 'https://images.unsplash.com/photo-1639024471283-03518883512d?w=400',
+      imagen:
+        'https://images.unsplash.com/photo-1639024471283-03518883512d?w=400',
       orden: 9,
       personalizaciones: {
         salsas: ['Ranch', 'Chipotle', 'BBQ'],
@@ -318,7 +331,12 @@ export default function SeedPage() {
       setCompleted(true);
     } catch (error) {
       errors.push(`Error general: ${error}`);
-      setResults({ categorias: 0, productos: 0, repartidores: 0, errors });
+      setResults({
+        categorias: 0,
+        productos: 0,
+        repartidores: 0,
+        errors,
+      });
     } finally {
       setLoading(false);
     }
@@ -406,12 +424,12 @@ export default function SeedPage() {
               </div>
 
               {results.errors.length > 0 && (
-                <div className="mt-4 p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                  <div className="flex items-center gap-2 text-red-600 mb-2">
+                <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 mb-2">
                     <XCircle className="h-4 w-4" />
                     <span className="font-semibold">Errores:</span>
                   </div>
-                  <ul className="text-sm text-red-600 space-y-1">
+                  <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
                     {results.errors.map((error, index) => (
                       <li key={index}>• {error}</li>
                     ))}

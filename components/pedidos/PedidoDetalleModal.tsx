@@ -44,32 +44,32 @@ const ESTADOS_CONFIG: Record<
 > = {
   pendiente: {
     label: 'Pendiente',
-    color: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20',
+    color: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20',
     icon: <Clock className="h-4 w-4" />,
   },
   en_preparacion: {
     label: 'En Preparación',
-    color: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
+    color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
     icon: <ChefHat className="h-4 w-4" />,
   },
   listo: {
     label: 'Listo',
-    color: 'bg-green-500/10 text-green-700 border-green-500/20',
+    color: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20',
     icon: <CheckCircle className="h-4 w-4" />,
   },
   en_reparto: {
     label: 'En Reparto',
-    color: 'bg-purple-500/10 text-purple-700 border-purple-500/20',
+    color: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
     icon: <Truck className="h-4 w-4" />,
   },
   entregado: {
     label: 'Entregado',
-    color: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
+    color: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
     icon: <Package className="h-4 w-4" />,
   },
   cancelado: {
     label: 'Cancelado',
-    color: 'bg-red-500/10 text-red-700 border-red-500/20',
+    color: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
     icon: <XCircle className="h-4 w-4" />,
   },
 };
@@ -126,7 +126,7 @@ export function PedidoDetalleModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-3">
@@ -147,14 +147,14 @@ export function PedidoDetalleModal({
               <User className="h-4 w-4" />
               Información del Cliente
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg border border-border">
               <div>
                 <p className="text-sm text-muted-foreground">Nombre</p>
-                <p className="font-medium">{pedido.cliente.nombre}</p>
+                <p className="font-medium text-foreground">{pedido.cliente.nombre}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Teléfono</p>
-                <p className="font-medium flex items-center gap-1">
+                <p className="font-medium text-foreground flex items-center gap-1">
                   <Phone className="h-3 w-3" />
                   {pedido.cliente.telefono}
                 </p>
@@ -162,8 +162,8 @@ export function PedidoDetalleModal({
               {pedido.cliente.direccion && (
                 <div className="md:col-span-2">
                   <p className="text-sm text-muted-foreground">Dirección</p>
-                  <p className="font-medium flex items-start gap-1">
-                    <MapPin className="h-3 w-3 mt-1 flex-shrink-0" />
+                  <p className="font-medium text-foreground flex items-start gap-1">
+                    <MapPin className="h-3 w-3 mt-1 shrink-0" />
                     {pedido.cliente.direccion}
                     {pedido.cliente.colonia && `, ${pedido.cliente.colonia}`}
                   </p>
@@ -172,7 +172,7 @@ export function PedidoDetalleModal({
               {pedido.cliente.referencia && (
                 <div className="md:col-span-2">
                   <p className="text-sm text-muted-foreground">Referencia</p>
-                  <p className="font-medium">{pedido.cliente.referencia}</p>
+                  <p className="font-medium text-foreground">{pedido.cliente.referencia}</p>
                 </div>
               )}
             </div>
@@ -195,15 +195,15 @@ export function PedidoDetalleModal({
                 {items.map((item, index) => (
                   <div
                     key={item.id || index}
-                    className="p-3 bg-muted/50 rounded-lg"
+                    className="p-3 bg-muted/50 rounded-lg border border-border"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">
+                          <span className="font-bold text-lg text-foreground">
                             {item.cantidad}x
                           </span>
-                          <span className="font-medium">
+                          <span className="font-medium text-foreground">
                             {item.productoNombre}
                           </span>
                         </div>
@@ -246,13 +246,13 @@ export function PedidoDetalleModal({
                           </div>
                         )}
                         {item.notas && (
-                          <p className="mt-1 text-sm text-yellow-600">
+                          <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
                             Nota: {item.notas}
                           </p>
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">
+                        <p className="font-bold text-foreground">
                           {formatCurrency(item.subtotal)}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -274,13 +274,13 @@ export function PedidoDetalleModal({
               <CreditCard className="h-4 w-4" />
               Resumen de Pago
             </h3>
-            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-              <div className="flex justify-between">
+            <div className="p-4 bg-muted/50 rounded-lg border border-border space-y-2">
+              <div className="flex justify-between text-foreground">
                 <span>Subtotal</span>
                 <span>{formatCurrency(pedido.totales.subtotal)}</span>
               </div>
               {pedido.totales.envio > 0 && (
-                <div className="flex justify-between">
+                <div className="flex justify-between text-foreground">
                   <span>Envío</span>
                   <span>{formatCurrency(pedido.totales.envio)}</span>
                 </div>
@@ -292,22 +292,22 @@ export function PedidoDetalleModal({
                 </div>
               )}
               <Separator />
-              <div className="flex justify-between font-bold text-lg">
+              <div className="flex justify-between font-bold text-lg text-foreground">
                 <span>Total</span>
                 <span>{formatCurrency(pedido.totales.total)}</span>
               </div>
               <Separator />
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-foreground">
                 <span>Método de pago</span>
                 <Badge variant="outline">{pedido.pago.metodo.toUpperCase()}</Badge>
               </div>
               {pedido.pago.metodo === 'efectivo' && pedido.pago.montoRecibido && (
                 <>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm text-foreground">
                     <span>Pagó con</span>
                     <span>{formatCurrency(pedido.pago.montoRecibido)}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-medium text-green-600">
+                  <div className="flex justify-between text-sm font-medium text-green-600 dark:text-green-400">
                     <span>Cambio</span>
                     <span>{formatCurrency(pedido.pago.cambio || 0)}</span>
                   </div>
@@ -325,11 +325,11 @@ export function PedidoDetalleModal({
                   <Truck className="h-4 w-4" />
                   Información de Reparto
                 </h3>
-                <div className="p-4 bg-purple-500/10 rounded-lg">
+                <div className="p-4 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg border border-purple-500/30">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-sm text-muted-foreground">Repartidor</p>
-                      <p className="font-medium">{pedido.reparto.repartidorNombre}</p>
+                      <p className="font-medium text-foreground">{pedido.reparto.repartidorNombre}</p>
                     </div>
                     <Badge variant="outline">
                       {pedido.reparto.estadoReparto || 'asignado'}
@@ -349,8 +349,8 @@ export function PedidoDetalleModal({
                   <FileText className="h-4 w-4" />
                   Observaciones
                 </h3>
-                <div className="p-4 bg-yellow-500/10 rounded-lg">
-                  <p>{pedido.observaciones}</p>
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-500/20 rounded-lg border border-yellow-200 dark:border-yellow-500/30">
+                  <p className="text-foreground font-medium">{pedido.observaciones}</p>
                 </div>
               </div>
             </>
@@ -361,7 +361,7 @@ export function PedidoDetalleModal({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Fecha de creación</p>
-              <p className="font-medium">
+              <p className="font-medium text-foreground">
                 {pedido.fechaCreacion.toDate().toLocaleString('es-MX')}
               </p>
             </div>

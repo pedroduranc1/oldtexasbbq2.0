@@ -1,9 +1,14 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { notificacionesService } from '@/lib/services/notificaciones.service';
 import { NotificationListener } from '@/components/notifications/notification-listener';
-import { ShoppingCart, Bell, Package, AlertTriangle, CheckCircle } from 'lucide-react';
+import {
+  ShoppingCart,
+  Bell,
+  Package,
+  AlertTriangle,
+  CheckCircle,
+} from 'lucide-react';
 
 interface Ticket {
   id: string;
@@ -82,34 +87,39 @@ export default function TestNotificationsPage() {
             Test de Notificaciones en Tiempo Real
           </h1>
           <p className="text-muted-foreground">
-            Crea un ticket en esta ventana y mira la notificación aparecer en otro navegador
+            Crea un ticket en esta ventana y mira la notificación aparecer en
+            otro navegador
           </p>
         </div>
 
         {/* Estado de Firebase */}
         {firebaseError ? (
-          <div className="bg-yellow-50 dark:bg-yellow-950/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-1" />
               <div className="flex-1">
-                <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
+                <h3 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-2">
                   Advertencia de Configuración
                 </h3>
-                <p className="text-yellow-800 dark:text-yellow-200 text-sm mb-3">
+                <p className="text-yellow-800 dark:text-yellow-300 text-sm mb-3">
                   {firebaseError}
                 </p>
-                <p className="text-yellow-700 dark:text-yellow-300 text-xs">
-                  Verifica que las variables de entorno en <code className="bg-yellow-200 dark:bg-yellow-900 px-1 rounded">.env</code> estén configuradas correctamente.
-                  Después de cambiar las variables, reinicia el servidor.
+                <p className="text-yellow-700 dark:text-yellow-400 text-xs">
+                  Verifica que las variables de entorno en{' '}
+                  <code className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">
+                    .env
+                  </code>{' '}
+                  estén configuradas correctamente. Después de cambiar las
+                  variables, reinicia el servidor.
                 </p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-              <p className="text-green-800 dark:text-green-200 font-medium">
+              <p className="text-green-800 dark:text-green-300 font-medium">
                 Firebase está configurado y listo para usar
               </p>
             </div>
@@ -117,22 +127,26 @@ export default function TestNotificationsPage() {
         )}
 
         {/* Instrucciones */}
-        <div className="bg-blue-50 dark:bg-blue-950/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-3">
             📋 Instrucciones de Prueba
           </h2>
-          <ol className="space-y-2 text-blue-800 dark:text-blue-200">
+          <ol className="space-y-2 text-blue-800 dark:text-blue-300">
             <li>
-              <strong>1.</strong> Abre esta página en dos navegadores diferentes (o dos ventanas en incógnito)
+              <strong>1.</strong> Abre esta página en dos navegadores diferentes
+              (o dos ventanas en incógnito)
             </li>
             <li>
-              <strong>2.</strong> Haz clic en "Crear Ticket de Compra" en una ventana
+              <strong>2.</strong> Haz clic en "Crear Ticket de Compra" en una
+              ventana
             </li>
             <li>
-              <strong>3.</strong> Observa cómo aparece la notificación toast en la otra ventana automáticamente
+              <strong>3.</strong> Observa cómo aparece la notificación toast en
+              la otra ventana automáticamente
             </li>
             <li>
-              <strong>4.</strong> La notificación es en tiempo real gracias a Firestore onSnapshot
+              <strong>4.</strong> La notificación es en tiempo real gracias a
+              Firestore onSnapshot
             </li>
           </ol>
         </div>
@@ -143,8 +157,8 @@ export default function TestNotificationsPage() {
             <ShoppingCart className="h-16 w-16 text-primary" />
             <h2 className="text-2xl font-bold">Crear Ticket de Compra</h2>
             <p className="text-muted-foreground text-center max-w-md">
-              Simula la creación de un ticket de compra. Esto generará una notificación que aparecerá en todas las
-              ventanas abiertas.
+              Simula la creación de un ticket de compra. Esto generará una
+              notificación que aparecerá en todas las ventanas abiertas.
             </p>
             <button
               onClick={crearTicketCompra}
@@ -168,11 +182,11 @@ export default function TestNotificationsPage() {
 
         {/* Último ticket creado */}
         {lastTicket && (
-          <div className="bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-3">
+          <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-green-900 dark:text-green-200 mb-3">
               ✅ Último Ticket Creado
             </h3>
-            <div className="space-y-2 text-green-800 dark:text-green-200">
+            <div className="space-y-2 text-green-800 dark:text-green-300">
               <p>
                 <strong>ID:</strong> {lastTicket.id}
               </p>
@@ -196,12 +210,25 @@ export default function TestNotificationsPage() {
 
         {/* Info adicional */}
         <div className="bg-muted rounded-lg p-6 text-sm text-muted-foreground">
-          <h3 className="font-semibold text-foreground mb-2">🔧 Detalles Técnicos</h3>
+          <h3 className="font-semibold text-foreground mb-2">
+            🔧 Detalles Técnicos
+          </h3>
           <ul className="space-y-1 list-disc list-inside">
-            <li>Las notificaciones se almacenan en Firestore colección "notificaciones"</li>
-            <li>El componente NotificationListener usa onSnapshot para escuchar cambios</li>
-            <li>Cuando se crea una notificación, se propaga a todos los clientes</li>
-            <li>Las notificaciones aparecen como toast en la esquina superior derecha</li>
+            <li>
+              Las notificaciones se almacenan en Firestore colección
+              "notificaciones"
+            </li>
+            <li>
+              El componente NotificationListener usa onSnapshot para escuchar
+              cambios
+            </li>
+            <li>
+              Cuando se crea una notificación, se propaga a todos los clientes
+            </li>
+            <li>
+              Las notificaciones aparecen como toast en la esquina superior
+              derecha
+            </li>
             <li>Incluye sonido y animación para mejor UX</li>
           </ul>
         </div>
@@ -211,13 +238,18 @@ export default function TestNotificationsPage() {
           <h3 className="font-semibold mb-3">🔍 Información de Debug</h3>
           <div className="space-y-2 text-sm font-mono">
             <p>
-              <strong>Project ID:</strong> {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'No configurado'}
+              <strong>Project ID:</strong>{' '}
+              {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'No configurado'}
             </p>
             <p>
-              <strong>Auth Domain:</strong> {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'No configurado'}
+              <strong>Auth Domain:</strong>{' '}
+              {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'No configurado'}
             </p>
             <p>
-              <strong>API Key:</strong> {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ Configurado' : '❌ No configurado'}
+              <strong>API Key:</strong>{' '}
+              {process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+                ? '✅ Configurado'
+                : '❌ No configurado'}
             </p>
           </div>
         </div>

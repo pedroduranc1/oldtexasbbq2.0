@@ -1,7 +1,10 @@
 'use client';
-
 import { useState } from 'react';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import {
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from 'firebase/auth';
 import { useAuth } from '@/lib/auth/useAuth';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, Lock, CheckCircle2 } from 'lucide-react';
@@ -11,7 +14,6 @@ import { ProtectedRoute } from '@/components/auth';
 function CambiarPasswordContent() {
   const router = useRouter();
   const { user } = useAuth();
-
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -80,6 +82,7 @@ function CambiarPasswordContent() {
       }, 3000);
     } catch (err: any) {
       let errorMessage = 'Error al cambiar la contraseña';
+
       switch (err?.code) {
         case 'auth/wrong-password':
           errorMessage = 'La contraseña actual es incorrecta';
@@ -96,6 +99,7 @@ function CambiarPasswordContent() {
         default:
           errorMessage = err?.message || errorMessage;
       }
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -104,20 +108,17 @@ function CambiarPasswordContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/30 dark:to-muted/10">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/30">
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-2xl shadow-texas p-8 text-center">
-            <div className="bg-green-100 dark:bg-green-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-green-100 dark:bg-green-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
-
             <h2 className="text-2xl font-bold mb-2">Contraseña Actualizada</h2>
-
             <p className="text-muted-foreground mb-6">
-              Tu contraseña ha sido cambiada exitosamente.
-              Serás redirigido al dashboard...
+              Tu contraseña ha sido cambiada exitosamente. Serás redirigido al
+              dashboard...
             </p>
-
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               Redirigiendo...
@@ -129,7 +130,7 @@ function CambiarPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/30 dark:to-muted/10">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted/30">
       <div className="w-full max-w-md">
         {/* Logo y título */}
         <div className="text-center mb-8">
@@ -170,7 +171,10 @@ function CambiarPasswordContent() {
                 <button
                   type="button"
                   onClick={() =>
-                    setShowPasswords((prev) => ({ ...prev, current: !prev.current }))
+                    setShowPasswords((prev) => ({
+                      ...prev,
+                      current: !prev.current,
+                    }))
                   }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
                   disabled={loading}
@@ -208,7 +212,10 @@ function CambiarPasswordContent() {
                 <button
                   type="button"
                   onClick={() =>
-                    setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
+                    setShowPasswords((prev) => ({
+                      ...prev,
+                      new: !prev.new,
+                    }))
                   }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
                   disabled={loading}
@@ -249,7 +256,10 @@ function CambiarPasswordContent() {
                 <button
                   type="button"
                   onClick={() =>
-                    setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))
+                    setShowPasswords((prev) => ({
+                      ...prev,
+                      confirm: !prev.confirm,
+                    }))
                   }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
                   disabled={loading}
@@ -272,7 +282,8 @@ function CambiarPasswordContent() {
 
             {/* Info message */}
             <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm text-muted-foreground">
-              Por seguridad, necesitas ingresar tu contraseña actual para confirmar el cambio.
+              Por seguridad, necesitas ingresar tu contraseña actual para
+              confirmar el cambio.
             </div>
 
             {/* Submit button */}
