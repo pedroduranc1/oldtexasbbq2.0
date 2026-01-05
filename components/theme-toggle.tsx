@@ -3,8 +3,14 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  variant?: 'fixed' | 'ghost';
+}
+
+export function ThemeToggle({ variant = 'fixed' }: ThemeToggleProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -21,6 +27,37 @@ export function ThemeToggle() {
     }
   }, [mounted, theme, setTheme]);
 
+  // Toggle simple entre light y dark
+  const handleThemeChange = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
+
+  const isDark = resolvedTheme === 'dark';
+
+  // Variant: Ghost (para usar en navbar)
+  if (variant === 'ghost') {
+    if (!mounted) {
+      return (
+        <Button variant="ghost" size="icon" disabled>
+          <Sun className="h-5 w-5" />
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleThemeChange}
+        aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+        title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+      >
+        {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      </Button>
+    );
+  }
+
+  // Variant: Fixed (botón flotante - default)
   if (!mounted) {
     return (
       <button
@@ -32,13 +69,6 @@ export function ThemeToggle() {
       </button>
     );
   }
-
-  // Toggle simple entre light y dark
-  const handleThemeChange = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-  };
-
-  const isDark = resolvedTheme === 'dark';
 
   return (
     <button
