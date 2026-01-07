@@ -178,7 +178,7 @@ export function CatalogoProductos({
               {/* Contenido */}
               <div className="p-4 space-y-3">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 line-clamp-1">
+                  <h3 className="text-lg font-bold text-foreground line-clamp-1">
                     {producto.nombre}
                   </h3>
                   <p className="text-sm text-gray-600 line-clamp-2 mt-1">
@@ -193,12 +193,12 @@ export function CatalogoProductos({
                         <span className="text-2xl font-bold text-red-600">
                           ${producto.precioPromocion.toFixed(2)}
                         </span>
-                        <span className="text-sm text-gray-400 line-through">
+                        <span className="text-sm text-foreground/90 line-through">
                           ${producto.precio.toFixed(2)}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-2xl font-bold text-gray-900">
+                      <span className="text-2xl font-bold text-foreground">
                         ${producto.precio.toFixed(2)}
                       </span>
                     )}
@@ -206,7 +206,7 @@ export function CatalogoProductos({
 
                   <Button
                     onClick={() => handleAgregar(producto)}
-                    className="gap-2 bg-red-600 hover:bg-red-700"
+                    className="gap-2 bg-red-600 hover:bg-red-700 text-white"
                   >
                     <Plus className="h-4 w-4" />
                     Agregar

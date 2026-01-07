@@ -27,7 +27,7 @@ export default function PedirPage() {
             <div className="hidden md:block text-right">
               <p className="text-sm opacity-80 flex items-center justify-end gap-1">
                 <MapPin className="h-4 w-4" />
-                Piedras Negras, Coahuila
+                Monterrey, Nuevo León
               </p>
               <p className="text-lg font-semibold flex items-center justify-end gap-1 mt-1">
                 <Phone className="h-4 w-4" />
@@ -51,7 +51,7 @@ export default function PedirPage() {
             reservados.
           </p>
           <p className="text-xs mt-2 text-muted-foreground">
-            El mejor BBQ estilo Texas en Piedras Negras
+            El mejor BBQ estilo Texas en Monterrey, Nuevo León
           </p>
         </div>
       </footer>
