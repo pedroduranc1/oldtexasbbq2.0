@@ -18,6 +18,8 @@ import {
   DollarSign,
   ChevronLeft,
   Menu,
+  Package,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -73,6 +75,12 @@ const navigation: NavItem[] = [
     roles: ['admin', 'encargado', 'cajera'],
   },
   {
+    title: 'Productos',
+    href: '/productos',
+    icon: UtensilsCrossed,
+    roles: ['admin', 'encargado'],
+  },
+  {
     title: 'Colonias',
     href: '/colonias',
     icon: MapPin,
@@ -84,17 +92,24 @@ const navigation: NavItem[] = [
     icon: FileText,
     roles: ['admin', 'encargado'],
   },
+  {
+    title: 'Componentes',
+    href: '/componentes',
+    icon: Package,
+    roles: ['admin'],
+  },
 ];
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isCollapsed, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname();
   const { userData } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Filtrar navegación según rol del usuario
   const filteredNavigation = navigation.filter((item) =>
@@ -140,7 +155,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={() => onCollapsedChange(!isCollapsed)}
               className="hidden lg:flex"
             >
               <ChevronLeft

@@ -502,33 +502,186 @@
 - [x] Responsive menu (hamburger en móvil)
 - [x] Tema dark/light (ya estaba implementado con ThemeToggle)
 
-### Componentes Compartidos
+### Componentes Compartidos ✅
 
-- [ ] Componente `Button` (variantes)
-- [ ] Componente `Input` con validación
-- [ ] Componente `Select` estilizado
-- [ ] Componente `Modal` reutilizable
-- [ ] Componente `Card`
-- [ ] Componente `Badge` (estados)
-- [ ] Componente `Spinner` / Loading
-- [ ] Componente `EmptyState`
-- [ ] Componente `ErrorBoundary`
-- [ ] Componente `Toast` para notificaciones
-- [ ] Componente `ConfirmDialog`
-- [ ] Componente `Tabs`
+- [x] Componente `Button` (variantes) - shadcn/ui
+- [x] Componente `Input` con validación - shadcn/ui + validators
+- [x] Componente `Select` estilizado - shadcn/ui
+- [x] Componente `Modal` reutilizable - Dialog de shadcn/ui
+- [x] Componente `Card` - shadcn/ui
+- [x] Componente `Badge` (estados) - shadcn/ui
+- [x] Componente `Spinner` / Loading - Personalizado
+- [x] Componente `EmptyState` - Personalizado
+- [x] Componente `ErrorBoundary` - Personalizado
+- [x] Componente `Toast` para notificaciones - Sonner (ya implementado)
+- [x] Componente `ConfirmDialog` - AlertDialog de shadcn/ui
+- [x] Componente `Tabs` - shadcn/ui
 
-### Utilidades
+### Utilidades ✅
 
-- [ ] Crear `formatters.ts` (formatear moneda, fecha, etc.)
-- [ ] Crear `validators.ts` (validar email, teléfono, etc.)
-- [ ] Crear `constants.ts` (estados, roles, canales, etc.)
-- [ ] Crear hook `useDebounce`
-- [ ] Crear hook `useLocalStorage`
-- [ ] Crear hook `useMediaQuery`
+- [x] Crear `formatters.ts` (formatear moneda, fecha, etc.)
+- [x] Crear `validators.ts` (validar email, teléfono, etc.)
+- [x] Crear `constants.ts` (estados, roles, canales, etc.)
+- [x] Crear hook `useDebounce`
+- [x] Crear hook `useLocalStorage`
+- [x] Crear hook `useMediaQuery`
+
+### Demostración ✅
+
+- [x] Crear página `/componentes` con demostración completa
+- [x] Documentar uso de todos los componentes
+- [x] Ejemplos interactivos de hooks y utilidades
+- [x] Agregar enlace en Sidebar (solo Admin)
 
 ---
 
-## 🔒 FASE 11: SEGURIDAD Y PERMISOS
+## 🍔 FASE 11: GESTIÓN DE PRODUCTOS (MENÚ)
+
+### Página de Gestión de Productos
+
+- [ ] Crear página `/productos` (Admin y Encargado)
+- [ ] Diseñar interfaz de gestión de productos
+- [ ] Vista de lista con tabla responsive
+- [ ] Vista de grid con cards de productos
+- [ ] Toggle entre vista lista/grid
+- [ ] Búsqueda por nombre de producto
+- [ ] Filtros por categoría
+- [ ] Filtro por disponibilidad (disponible/agotado)
+- [ ] Ordenamiento (nombre, precio, fecha)
+- [ ] Paginación de productos
+- [ ] Indicador visual de productos destacados/promoción
+
+### CRUD de Productos
+
+- [ ] Crear servicio `productosService.ts`
+  - [ ] `createProducto(producto)` - Crear nuevo producto
+  - [ ] `updateProducto(id, data)` - Actualizar producto
+  - [ ] `deleteProducto(id)` - Eliminar producto (soft delete)
+  - [ ] `getProductos()` - Obtener todos los productos
+  - [ ] `getProductoById(id)` - Obtener producto por ID
+  - [ ] `searchProductos(query, filters)` - Búsqueda con filtros
+  - [ ] `toggleDisponibilidad(id)` - Activar/desactivar disponibilidad
+  - [ ] `toggleDestacado(id)` - Marcar como destacado
+
+### Formulario de Producto
+
+- [ ] Crear componente `FormProducto`
+- [ ] Modal para crear/editar producto
+- [ ] Campos del formulario:
+  - [ ] Nombre del producto (requerido)
+  - [ ] Descripción (opcional)
+  - [ ] Precio (requerido, validación de monto)
+  - [ ] Categoría (select de categorías)
+  - [ ] Foto del producto (upload con Cloudinary)
+  - [ ] Disponible (switch on/off)
+  - [ ] Destacado (switch on/off)
+  - [ ] En promoción (switch on/off)
+  - [ ] Precio de promoción (opcional, solo si está en promoción)
+  - [ ] Orden de visualización (número)
+- [ ] Validaciones con React Hook Form + validators
+- [ ] Preview de imagen antes de subir
+- [ ] Crop/resize de imagen (opcional)
+- [ ] Loading states durante guardado
+- [ ] Feedback de éxito/error
+
+### Upload de Imágenes con Cloudinary
+
+- [ ] Integrar servicio de Cloudinary existente
+- [ ] Componente `ImageUpload` reutilizable
+- [ ] Drag & drop de imágenes
+- [ ] Validación de tipo de archivo (solo imágenes)
+- [ ] Validación de tamaño máximo (5MB)
+- [ ] Comprimir imagen antes de subir
+- [ ] Progress bar de upload
+- [ ] Eliminar imagen anterior al actualizar
+- [ ] Placeholder cuando no hay imagen
+- [ ] Optimización de imágenes (formato WebP)
+
+### Gestión de Categorías
+
+- [ ] Crear página `/productos/categorias`
+- [ ] Componente `GestionCategorias`
+- [ ] Lista de categorías existentes
+- [ ] CRUD de categorías:
+  - [ ] Crear nueva categoría
+  - [ ] Editar nombre de categoría
+  - [ ] Eliminar categoría (verificar productos asociados)
+  - [ ] Ordenar categorías (drag & drop o campo orden)
+- [ ] Servicio `categoriasService.ts`
+- [ ] Modal para crear/editar categoría
+- [ ] Validación: no duplicar nombres
+- [ ] Mostrar cantidad de productos por categoría
+
+### Componentes de Visualización
+
+- [ ] Componente `ProductoCard` (vista grid)
+  - [ ] Foto del producto
+  - [ ] Nombre y precio
+  - [ ] Badge de disponibilidad
+  - [ ] Badge de destacado/promoción
+  - [ ] Botones de acción (editar, eliminar)
+- [ ] Componente `ProductoRow` (vista lista/tabla)
+  - [ ] Miniatura de foto
+  - [ ] Información completa en columnas
+  - [ ] Actions (editar, eliminar, toggle disponibilidad)
+- [ ] Componente `ProductoDetalle` (modal de vista completa)
+  - [ ] Toda la información del producto
+  - [ ] Imagen en grande
+  - [ ] Historial de cambios (opcional)
+
+### Lógica de Negocio
+
+- [ ] Validar que precio > 0
+- [ ] Validar que precio promoción < precio normal
+- [ ] Soft delete (no eliminar físicamente, marcar como eliminado)
+- [ ] Mantener histórico de precios (opcional)
+- [ ] Verificar productos en pedidos activos antes de eliminar
+- [ ] Actualizar automáticamente en selector de productos (pedidos)
+- [ ] Cache de productos en store de Zustand
+- [ ] Sincronización en tiempo real con Firestore
+
+### Permisos y Seguridad
+
+- [ ] Solo Admin y Encargado pueden gestionar productos
+- [ ] Cajera solo puede ver productos (lectura)
+- [ ] Cocina no tiene acceso a gestión de productos
+- [ ] Repartidor no tiene acceso
+- [ ] Reglas de Firestore para colección `productos`
+- [ ] Validación de permisos en servicios
+- [ ] Audit log de cambios en productos (quién, cuándo, qué cambió)
+
+### Integración con Otros Módulos
+
+- [ ] Actualizar selector de productos en `FormPedido`
+- [ ] Sincronizar productos en tiempo real en página de pedidos
+- [ ] Mostrar productos agotados con badge en selector
+- [ ] Filtrar productos no disponibles en formulario público `/pedir`
+- [ ] Actualizar catálogo público automáticamente
+- [ ] Invalidar cache cuando se actualiza un producto
+
+### Mejoras y Features Adicionales
+
+- [ ] Import masivo de productos (CSV/Excel)
+- [ ] Export de productos a CSV
+- [ ] Duplicar producto (copiar para crear variante)
+- [ ] Productos con variantes (tamaños, extras) - Opcional
+- [ ] Sistema de tags/etiquetas - Opcional
+- [ ] Galería múltiple de fotos por producto - Opcional
+- [ ] Productos más vendidos (estadísticas) - Opcional
+- [ ] Alerta de productos sin foto
+- [ ] Validación de productos duplicados (mismo nombre)
+
+### Testing
+
+- [ ] Tests unitarios de `productosService`
+- [ ] Tests de componente `FormProducto`
+- [ ] Tests de validaciones
+- [ ] Tests de upload de imágenes
+- [ ] Test E2E de flujo completo (crear, editar, eliminar)
+
+---
+
+## 🔒 FASE 12: SEGURIDAD Y PERMISOS
 
 ### Firestore Rules
 
@@ -558,7 +711,7 @@
 
 ---
 
-## 🧪 FASE 12: TESTING
+## 🧪 FASE 13: TESTING
 
 ### Unit Tests
 
@@ -583,7 +736,7 @@
 
 ---
 
-## 📚 FASE 13: DOCUMENTACIÓN
+## 📚 FASE 14: DOCUMENTACIÓN
 
 ### Documentación Técnica
 
@@ -607,7 +760,7 @@
 
 ---
 
-## 🚀 FASE 14: DEPLOYMENT Y LANZAMIENTO
+## 🚀 FASE 15: DEPLOYMENT Y LANZAMIENTO
 
 ### Preparación para Producción
 
@@ -642,7 +795,7 @@
 
 ---
 
-## 🔧 FASE 15: MANTENIMIENTO Y MEJORAS
+## 🔧 FASE 16: MANTENIMIENTO Y MEJORAS
 
 ### Post-Lanzamiento
 

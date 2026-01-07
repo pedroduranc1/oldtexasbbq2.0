@@ -13,14 +13,25 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
 
       {/* Main content area */}
-      <div className={cn('lg:pl-64 transition-all duration-300')}>
+      <div
+        className={cn(
+          'transition-all duration-300',
+          sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
+        )}
+      >
         {/* Navbar */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 

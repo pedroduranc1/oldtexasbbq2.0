@@ -1,10 +1,24 @@
-// Utilidades para formatear datos
+/**
+ * Utilidades para formatear datos
+ * Old Texas BBQ - CRM
+ */
 
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
     currency: 'MXN',
   }).format(amount);
+};
+
+export const formatNumber = (num: number, decimals: number = 0): string => {
+  return new Intl.NumberFormat('es-MX', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(num);
+};
+
+export const formatPercent = (value: number, decimals: number = 0): string => {
+  return `${formatNumber(value, decimals)}%`;
 };
 
 export const formatDate = (date: Date | string): string => {
@@ -48,4 +62,45 @@ export const formatPhone = (phone: string): string => {
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
+};
+
+export const capitalize = (text: string): string => {
+  return text
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+export const formatRelativeTime = (date: Date | string): string => {
+  const now = new Date();
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'Hace un momento';
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `Hace ${diffInMinutes} ${diffInMinutes === 1 ? 'minuto' : 'minutos'}`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `Hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `Hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
+  }
+
+  return formatDate(dateObj);
+};
+
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
