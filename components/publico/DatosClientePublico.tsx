@@ -289,7 +289,7 @@ export function DatosClientePublico({
               }
             >
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer ">
                   <RadioGroupItem value="efectivo" id="efectivo" />
                   <Banknote className="h-5 w-5 text-green-600" />
                   <div className="flex-1">
@@ -300,7 +300,7 @@ export function DatosClientePublico({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer ">
                   <RadioGroupItem value="tarjeta" id="tarjeta" />
                   <CreditCard className="h-5 w-5 text-blue-600" />
                   <div className="flex-1">
@@ -311,7 +311,7 @@ export function DatosClientePublico({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer ">
                   <RadioGroupItem value="transferencia" id="transferencia" />
                   <Smartphone className="h-5 w-5 text-purple-600" />
                   <div className="flex-1">

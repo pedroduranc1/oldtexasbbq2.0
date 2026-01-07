@@ -28,11 +28,11 @@ export function ConfirmacionPedido({
         </div>
 
         {/* Mensaje principal */}
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
           ¡Pedido Confirmado!
         </h1>
 
-        <p className="text-lg text-gray-600 mb-8">
+        <p className="text-lg text-foreground/70 mb-8">
           Gracias por tu pedido. Hemos recibido tu orden y la estamos
           preparando.
         </p>
@@ -106,7 +106,7 @@ export function ConfirmacionPedido({
         <div className="space-y-3">
           <Button
             onClick={onNuevoPedido}
-            className="w-full bg-red-600 hover:bg-red-700 h-12 text-lg"
+            className="w-full bg-red-600 text-white hover:bg-red-700 h-12 text-lg"
             size="lg"
           >
             Hacer Otro Pedido
