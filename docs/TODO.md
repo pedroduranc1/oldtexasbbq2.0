@@ -535,69 +535,69 @@
 
 ---
 
-- [] cuando se hace un pedido desde /pedir tiene que haber una opcion en dashboard al momento de enviar a reparto si no existe repartidor se pueda seleccionar uno
+- [x] cuando se hace un pedido desde /pedir tiene que haber una opcion en dashboard al momento de enviar a reparto si no existe repartidor se pueda seleccionar uno
 
 ## 🍔 FASE 11: GESTIÓN DE PRODUCTOS (MENÚ)
 
-### Página de Gestión de Productos
+### Página de Gestión de Productos ✅
 
-- [ ] Crear página `/productos` (Admin y Encargado)
-- [ ] Diseñar interfaz de gestión de productos
-- [ ] Vista de lista con tabla responsive
-- [ ] Vista de grid con cards de productos
-- [ ] Toggle entre vista lista/grid
-- [ ] Búsqueda por nombre de producto
-- [ ] Filtros por categoría
-- [ ] Filtro por disponibilidad (disponible/agotado)
-- [ ] Ordenamiento (nombre, precio, fecha)
-- [ ] Paginación de productos
-- [ ] Indicador visual de productos destacados/promoción
+- [x] Crear página `/productos` (Admin y Encargado)
+- [x] Diseñar interfaz de gestión de productos
+- [x] Vista de lista con tabla responsive
+- [x] Vista de grid con cards de productos
+- [x] Toggle entre vista lista/grid
+- [x] Búsqueda por nombre de producto
+- [x] Filtros por categoría
+- [x] Filtro por disponibilidad (disponible/agotado)
+- [x] Ordenamiento (nombre, precio, fecha)
+- [x] Paginación de productos
+- [x] Indicador visual de productos destacados/promoción
 
-### CRUD de Productos
+### CRUD de Productos ✅
 
-- [ ] Crear servicio `productosService.ts`
-  - [ ] `createProducto(producto)` - Crear nuevo producto
-  - [ ] `updateProducto(id, data)` - Actualizar producto
-  - [ ] `deleteProducto(id)` - Eliminar producto (soft delete)
-  - [ ] `getProductos()` - Obtener todos los productos
-  - [ ] `getProductoById(id)` - Obtener producto por ID
-  - [ ] `searchProductos(query, filters)` - Búsqueda con filtros
-  - [ ] `toggleDisponibilidad(id)` - Activar/desactivar disponibilidad
-  - [ ] `toggleDestacado(id)` - Marcar como destacado
+- [x] Crear servicio `productosService.ts`
+  - [x] `createProducto(producto)` - Crear nuevo producto
+  - [x] `updateProducto(id, data)` - Actualizar producto
+  - [x] `deleteProducto(id)` - Eliminar producto (soft delete)
+  - [x] `getProductos()` - Obtener todos los productos
+  - [x] `getProductoById(id)` - Obtener producto por ID
+  - [x] `searchProductos(query, filters)` - Búsqueda con filtros
+  - [x] `toggleDisponibilidad(id)` - Activar/desactivar disponibilidad
+  - [x] `toggleDestacado(id)` - Marcar como destacado
 
 ### Formulario de Producto
 
-- [ ] Crear componente `FormProducto`
-- [ ] Modal para crear/editar producto
-- [ ] Campos del formulario:
-  - [ ] Nombre del producto (requerido)
-  - [ ] Descripción (opcional)
-  - [ ] Precio (requerido, validación de monto)
-  - [ ] Categoría (select de categorías)
-  - [ ] Foto del producto (upload con Cloudinary)
-  - [ ] Disponible (switch on/off)
-  - [ ] Destacado (switch on/off)
-  - [ ] En promoción (switch on/off)
-  - [ ] Precio de promoción (opcional, solo si está en promoción)
-  - [ ] Orden de visualización (número)
-- [ ] Validaciones con React Hook Form + validators
-- [ ] Preview de imagen antes de subir
-- [ ] Crop/resize de imagen (opcional)
-- [ ] Loading states durante guardado
-- [ ] Feedback de éxito/error
+- [x] Crear componente `FormProducto`
+- [x] Modal para crear/editar producto
+- [x] Campos del formulario:
+  - [x] Nombre del producto (requerido)
+  - [x] Descripción (opcional)
+  - [x] Precio (requerido, validación de monto)
+  - [x] Categoría (select de categorías)
+  - [x] Foto del producto (upload con Cloudinary)
+  - [x] Disponible (switch on/off)
+  - [x] Destacado (switch on/off)
+  - [x] En promoción (switch on/off)
+  - [x] Precio de promoción (opcional, solo si está en promoción)
+  - [x] Orden de visualización (número)
+- [x] Validaciones con React Hook Form + validators
+- [x] Preview de imagen antes de subir
+- [x] Crop/resize de imagen (opcional)
+- [x] Loading states durante guardado
+- [x] Feedback de éxito/error
 
 ### Upload de Imágenes con Cloudinary
 
-- [ ] Integrar servicio de Cloudinary existente
-- [ ] Componente `ImageUpload` reutilizable
-- [ ] Drag & drop de imágenes
-- [ ] Validación de tipo de archivo (solo imágenes)
-- [ ] Validación de tamaño máximo (5MB)
-- [ ] Comprimir imagen antes de subir
-- [ ] Progress bar de upload
-- [ ] Eliminar imagen anterior al actualizar
-- [ ] Placeholder cuando no hay imagen
-- [ ] Optimización de imágenes (formato WebP)
+- [x] Integrar servicio de Cloudinary existente
+- [x] Componente `ImageUpload` reutilizable
+- [x] Drag & drop de imágenes
+- [x] Validación de tipo de archivo (solo imágenes)
+- [x] Validación de tamaño máximo (5MB)
+- [x] Comprimir imagen antes de subir
+- [x] Progress bar de upload
+- [x] Eliminar imagen anterior al actualizar
+- [x] Placeholder cuando no hay imagen
+- [x] Optimización de imágenes (formato WebP)
 
 ### Gestión de Categorías
 

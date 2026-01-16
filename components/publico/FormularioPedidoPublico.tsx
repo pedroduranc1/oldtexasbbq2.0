@@ -5,11 +5,10 @@ import { CatalogoProductos } from './CatalogoProductos';
 import { CarritoPedidoPublico } from './CarritoPedidoPublico';
 import { DatosClientePublico } from './DatosClientePublico';
 import { ConfirmacionPedido } from './ConfirmacionPedido';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Producto } from '@/lib/types/firestore';
-import { ShoppingCart, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ItemCarritoPublico {
@@ -104,7 +103,7 @@ export function FormularioPedidoPublico() {
           nombre: producto.nombre,
           precio: producto.precio,
           cantidad: 1,
-          foto: producto.foto,
+          foto: producto.imagen,
           subtotal: producto.precio,
         },
       ];

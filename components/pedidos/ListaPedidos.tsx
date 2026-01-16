@@ -19,6 +19,7 @@ import type {
   CanalVenta,
   Repartidor,
 } from '@/lib/types/firestore';
+import { Timestamp } from 'firebase/firestore';
 import {
   Search,
   Filter,
@@ -31,6 +32,7 @@ import {
 import { toast } from 'sonner';
 import { PedidoCard } from './PedidoCard';
 import { PedidoDetalleModal } from './PedidoDetalleModal';
+import { AsignarRepartidorModal } from './AsignarRepartidorModal';
 
 const ESTADOS: { value: EstadoPedido | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos los estados' },
@@ -80,6 +82,10 @@ export function ListaPedidos() {
     null
   );
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Estados del modal de asignar repartidor
+  const [pedidoParaAsignar, setPedidoParaAsignar] = useState<Pedido | null>(null);
+  const [modalAsignarOpen, setModalAsignarOpen] = useState(false);
 
   // Cargar datos iniciales y suscripción en tiempo real
   useEffect(() => {
@@ -195,6 +201,18 @@ export function ListaPedidos() {
     nuevoEstado: EstadoPedido
   ) => {
     try {
+      // Si el nuevo estado es "en_reparto", verificar que tenga repartidor asignado
+      if (nuevoEstado === 'en_reparto') {
+        const pedido = pedidos.find((p) => p.id === pedidoId);
+
+        // Si no tiene repartidor asignado, mostrar modal de asignación
+        if (pedido && (!pedido.reparto || !pedido.reparto.repartidorId)) {
+          setPedidoParaAsignar(pedido);
+          setModalAsignarOpen(true);
+          return; // No continuar con el cambio de estado
+        }
+      }
+
       setLoadingAccion(true);
       await pedidosService.update(pedidoId, { estado: nuevoEstado });
 
@@ -216,6 +234,71 @@ export function ListaPedidos() {
     } catch (error) {
       console.error('Error actualizando estado:', error);
       toast.error('Error al actualizar el pedido');
+    } finally {
+      setLoadingAccion(false);
+    }
+  };
+
+  const handleAsignarRepartidor = async (repartidorId: string) => {
+    if (!pedidoParaAsignar) return;
+
+    try {
+      setLoadingAccion(true);
+
+      // Obtener información del repartidor
+      const repartidor = repartidores.find((r) => r.id === repartidorId);
+      if (!repartidor) {
+        toast.error('Repartidor no encontrado');
+        return;
+      }
+
+      // Asignar repartidor usando el método del servicio
+      await pedidosService.asignarRepartidor(
+        pedidoParaAsignar.id,
+        repartidor.id,
+        `${repartidor.nombre} ${repartidor.apellido}`,
+        repartidor.comisionPorDefecto,
+        'sistema', // TODO: Obtener usuarioId del contexto
+        'Sistema'  // TODO: Obtener usuarioNombre del contexto
+      );
+
+      // Cambiar estado a "en_reparto"
+      await pedidosService.update(pedidoParaAsignar.id, {
+        estado: 'en_reparto' as const,
+      } as any);
+
+      // Actualizar estado local
+      const repartoData = {
+        repartidorId: repartidor.id,
+        repartidorNombre: `${repartidor.nombre} ${repartidor.apellido}`,
+        comisionRepartidor: repartidor.comisionPorDefecto,
+        estadoReparto: 'asignado' as const,
+        horaAsignacion: Timestamp.now(),
+        liquidado: false,
+      };
+
+      setPedidos((prev) =>
+        prev.map((p) =>
+          p.id === pedidoParaAsignar.id
+            ? {
+                ...p,
+                estado: 'en_reparto' as const,
+                reparto: repartoData,
+              }
+            : p
+        )
+      );
+
+      toast.success(
+        `Repartidor asignado y pedido enviado a reparto correctamente`
+      );
+
+      // Cerrar modal
+      setModalAsignarOpen(false);
+      setPedidoParaAsignar(null);
+    } catch (error) {
+      console.error('Error asignando repartidor:', error);
+      toast.error('Error al asignar el repartidor');
     } finally {
       setLoadingAccion(false);
     }
@@ -506,6 +589,21 @@ export function ListaPedidos() {
         }}
         onCambiarEstado={handleCambiarEstado}
       />
+
+      {/* Modal de asignar repartidor */}
+      {pedidoParaAsignar && (
+        <AsignarRepartidorModal
+          open={modalAsignarOpen}
+          onClose={() => {
+            setModalAsignarOpen(false);
+            setPedidoParaAsignar(null);
+          }}
+          onAsignar={handleAsignarRepartidor}
+          repartidores={repartidores}
+          numeroPedido={pedidoParaAsignar.numeroPedido}
+          loading={loadingAccion}
+        />
+      )}
     </div>
   );
 }

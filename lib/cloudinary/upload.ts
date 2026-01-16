@@ -125,12 +125,30 @@ export const uploadToCloudinary = async (
   try {
     const config = getCloudinaryInstance();
 
+    // Debug: Verificar configuración
+    console.group('☁️ Cloudinary Upload Debug');
+    console.log('Cloud Name:', config.cloudName || '❌ NO CONFIGURADO');
+    console.log('Upload Preset:', config.uploadPreset || '❌ NO CONFIGURADO');
+    console.log('Archivo:', file.name, `(${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+    console.log('Tipo:', file.type);
+    console.log('Carpeta destino:', options.folder);
+    console.groupEnd();
+
+    if (!config.cloudName) {
+      return {
+        success: false,
+        error: new Error('Cloud Name no configurado'),
+        message:
+          'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME no esta configurado en .env.local',
+      };
+    }
+
     if (!config.uploadPreset) {
       return {
         success: false,
         error: new Error('Upload preset no configurado'),
         message:
-          'NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET no esta configurado en .env',
+          'NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET no esta configurado en .env.local',
       };
     }
 
@@ -164,13 +182,8 @@ export const uploadToCloudinary = async (
       formData.append('context', contextString);
     }
 
-    // Agregar transformacion si se proporciona
-    if (options.transformation) {
-      const transformation = buildTransformationString(options.transformation);
-      if (transformation) {
-        formData.append('transformation', transformation);
-      }
-    }
+    // NOTA: Las transformaciones no se pueden enviar en unsigned uploads.
+    // Deben configurarse directamente en el upload preset de Cloudinary.
 
     // Realizar upload con XMLHttpRequest para soporte de progreso
     return new Promise<CloudinaryUploadResult>((resolve) => {
@@ -212,20 +225,57 @@ export const uploadToCloudinary = async (
             });
           }
         } else {
+          // Intentar obtener mensaje de error de Cloudinary
+          let errorMessage = `HTTP ${xhr.status}: ${xhr.statusText}`;
+
+          console.group('❌ Error de Cloudinary');
+          console.log('Status:', xhr.status);
+          console.log('Status Text:', xhr.statusText);
+          console.log('Response Text:', xhr.responseText);
+
+          try {
+            const errorResponse = JSON.parse(xhr.responseText);
+            console.log('Response JSON:', errorResponse);
+
+            // Cloudinary puede devolver el error de diferentes formas
+            if (errorResponse.error?.message) {
+              errorMessage = errorResponse.error.message;
+            } else if (errorResponse.error) {
+              errorMessage = typeof errorResponse.error === 'string'
+                ? errorResponse.error
+                : JSON.stringify(errorResponse.error);
+            } else if (errorResponse.message) {
+              errorMessage = errorResponse.message;
+            }
+          } catch {
+            console.log('No se pudo parsear la respuesta como JSON');
+          }
+
+          console.log('Mensaje de error final:', errorMessage);
+          console.groupEnd();
+
           resolve({
             success: false,
-            error: new Error(`HTTP ${xhr.status}: ${xhr.statusText}`),
-            message: 'Error al subir archivo a Cloudinary',
+            error: new Error(errorMessage),
+            message: errorMessage,
           });
         }
       });
 
-      // Manejar error
-      xhr.addEventListener('error', () => {
+      // Manejar error de red/CORS
+      xhr.addEventListener('error', (event) => {
+        console.group('❌ Error de RED/CORS en Cloudinary');
+        console.log('Evento:', event);
+        console.log('XHR Status:', xhr.status);
+        console.log('XHR Ready State:', xhr.readyState);
+        console.log('Esto generalmente indica un problema de CORS o red.');
+        console.log('Verifica que el upload preset esté configurado como "unsigned".');
+        console.groupEnd();
+
         resolve({
           success: false,
-          error: new Error('Error de red al subir archivo'),
-          message: 'Error de red al subir archivo',
+          error: new Error('Error de red al subir archivo. Posible problema de CORS.'),
+          message: 'Error de red. Verifica tu conexión y la configuración de Cloudinary.',
         });
       });
 
@@ -240,6 +290,22 @@ export const uploadToCloudinary = async (
 
       // Configurar y enviar request
       const uploadUrl = `${getCloudinaryApiUrl()}/image/upload`;
+
+      console.group('📤 Enviando request a Cloudinary');
+      console.log('URL:', uploadUrl);
+      console.log('Upload Preset:', config.uploadPreset);
+      console.log('Public ID:', publicId);
+      console.log('Folder:', options.folder);
+      console.log('FormData entries:');
+      for (const [key, value] of formData.entries()) {
+        if (key === 'file') {
+          console.log(`  ${key}: [File] ${(value as File).name}`);
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
+      }
+      console.groupEnd();
+
       xhr.open('POST', uploadUrl);
       xhr.timeout = 60000; // 60 segundos
       xhr.send(formData);

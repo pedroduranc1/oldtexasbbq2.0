@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Producto } from '@/lib/types/firestore';
 import { productosService } from '@/lib/services/productos.service';
-import { Plus, Search, Flame, Star } from 'lucide-react';
+import { Plus, Search, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -47,13 +47,13 @@ export function CatalogoProductos({
 
   // Obtener categorías únicas
   const categorias = Array.from(
-    new Set(productos.map((p) => p.categoria))
-  ).sort();
+    new Set(productos.map((p) => p.categoriaNombre))
+  ).filter(Boolean).sort();
 
   // Filtrar productos
   const productosFiltrados = productos.filter((producto) => {
     const matchCategoria =
-      !categoriaSeleccionada || producto.categoria === categoriaSeleccionada;
+      !categoriaSeleccionada || producto.categoriaNombre === categoriaSeleccionada;
     const matchBusqueda =
       !busqueda ||
       producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -145,9 +145,9 @@ export function CatalogoProductos({
             >
               {/* Imagen del producto */}
               <div className="relative h-48 bg-gray-100 overflow-hidden">
-                {producto.foto ? (
+                {producto.imagen ? (
                   <Image
-                    src={producto.foto}
+                    src={producto.imagen}
                     alt={producto.nombre}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-300"
@@ -159,20 +159,14 @@ export function CatalogoProductos({
                 )}
 
                 {/* Badges */}
-                <div className="absolute top-2 left-2 flex gap-2">
-                  {producto.enPromocion && (
-                    <Badge key="promo" className="bg-red-600 text-white">
+                {producto.enPromocion && (
+                  <div className="absolute top-2 left-2">
+                    <Badge className="bg-red-600 text-white">
                       <Flame className="h-3 w-3 mr-1" />
                       Promoción
                     </Badge>
-                  )}
-                  {producto.destacado && (
-                    <Badge key="destacado" className="bg-yellow-500 text-white">
-                      <Star className="h-3 w-3 mr-1" />
-                      Destacado
-                    </Badge>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Contenido */}
