@@ -20,6 +20,8 @@ import ProductosTable from '@/components/productos/ProductosTable';
 import ProductosGrid from '@/components/productos/ProductosGrid';
 import { ProductoModal } from '@/components/productos/ProductoModal';
 import { ProductoDetalle } from '@/components/productos/ProductoDetalle';
+import { ImportExportModal } from '@/components/productos/ImportExportModal';
+import { AlertaProductosSinFoto } from '@/components/productos/AlertaProductosSinFoto';
 
 type VistaProductos = 'tabla' | 'grid';
 
@@ -39,6 +41,9 @@ export default function ProductosPage() {
   // Estado del modal de detalle
   const [detalleOpen, setDetalleOpen] = useState(false);
   const [productoDetalle, setProductoDetalle] = useState<Producto | null>(null);
+
+  // Estado del modal de Import/Export
+  const [importExportOpen, setImportExportOpen] = useState(false);
 
   // Filtros y búsqueda
   const [busqueda, setBusqueda] = useState('');
@@ -199,12 +204,41 @@ export default function ProductosPage() {
 
   const handleEliminarProducto = async (id: string) => {
     try {
-      // Soft delete: marcar como no disponible
-      await productosService.delete(id);
-      toast.success('Producto eliminado correctamente');
+      // Soft delete con verificación de pedidos activos
+      const resultado = await productosService.softDelete(
+        id,
+        userData?.uid || 'unknown',
+        userData?.nombre || 'Usuario'
+      );
+
+      if (resultado.success) {
+        toast.success(resultado.message);
+      } else {
+        toast.error(resultado.message);
+      }
     } catch (error) {
       console.error('Error al eliminar producto:', error);
       toast.error('Error al eliminar producto');
+    }
+  };
+
+  // Handler para duplicar producto
+  const handleDuplicarProducto = async (producto: Producto) => {
+    try {
+      const nuevoId = await productosService.duplicarProducto(
+        producto.id,
+        userData?.uid || 'unknown'
+      );
+      toast.success(`Producto duplicado correctamente`);
+      // Abrir modal de edición con el nuevo producto
+      const nuevoProducto = await productosService.getById(nuevoId);
+      if (nuevoProducto) {
+        setProductoEditar(nuevoProducto);
+        setModalOpen(true);
+      }
+    } catch (error: any) {
+      console.error('Error al duplicar producto:', error);
+      toast.error(error.message || 'Error al duplicar producto');
     }
   };
 
@@ -218,6 +252,12 @@ export default function ProductosPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Alerta de productos sin foto */}
+      <AlertaProductosSinFoto
+        productos={productos}
+        onEditarProducto={handleEditarProducto}
+      />
+
       {/* Header */}
       <ProductosHeader
         totalProductos={productos.length}
@@ -227,6 +267,7 @@ export default function ProductosPage() {
         busqueda={busqueda}
         onBusquedaChange={setBusqueda}
         onNuevoProducto={handleNuevoProducto}
+        onImportExport={() => setImportExportOpen(true)}
       />
 
       {/* Filtros */}
@@ -310,6 +351,15 @@ export default function ProductosPage() {
         open={detalleOpen}
         onClose={handleCloseDetalle}
         onEdit={handleEditarDesdeDetalle}
+        onDuplicar={handleDuplicarProducto}
+      />
+
+      {/* Modal de Import/Export */}
+      <ImportExportModal
+        open={importExportOpen}
+        onClose={() => setImportExportOpen(false)}
+        productos={productos}
+        usuarioId={userData?.uid || 'unknown'}
       />
     </div>
   );

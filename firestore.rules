@@ -218,20 +218,35 @@ service cloud.firestore {
     match /productos/{productoId} {
       // LEER
       allow read: if (
-        // Autenticados activos ven todos los productos
+        // Autenticados activos ven todos los productos (incluyendo eliminados para gestión)
         (isAuthenticated() && isActive()) ||
-        // Público ve solo productos disponibles (para formulario web)
-        (resource.data.disponible == true)
+        // Público ve solo productos disponibles Y no eliminados (para formulario web)
+        (resource.data.disponible == true &&
+         (resource.data.eliminado == null || resource.data.eliminado == false))
       );
 
       // CREAR
-      allow create: if isManager() && isActive();
+      // Managers pueden crear productos, debe incluir creadoPor
+      allow create: if isManager() && isActive() &&
+                       request.resource.data.creadoPor == request.auth.uid;
 
       // ACTUALIZAR
-      allow update: if isManager() && isActive();
+      // Managers pueden actualizar (incluyendo soft delete)
+      // Validar que no se modifique creadoPor ni fechaCreacion
+      allow update: if isManager() && isActive() &&
+                       !request.resource.data.diff(resource.data).affectedKeys()
+                         .hasAny(['creadoPor', 'fechaCreacion']);
 
-      // ELIMINAR
+      // ELIMINAR (hard delete)
+      // Solo admin puede eliminar físicamente
       allow delete: if isAdmin();
+
+      // SUBCOLECCIÓN: PERSONALIZACIONES
+      match /personalizaciones/{persId} {
+        allow read: if (isAuthenticated() && isActive()) ||
+                       resource.data.activa == true;
+        allow write: if isManager() && isActive();
+      }
     }
 
     // ========================================================================

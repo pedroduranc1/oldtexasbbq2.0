@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, ShoppingCart, RefreshCw } from 'lucide-react';
 import { Producto } from '@/lib/types/firestore';
-import { productosService } from '@/lib/services/productos.service';
+import { useProductosStore } from '@/lib/stores/productos.store';
 
 interface ProductoSelectorProps {
   value: any[];
@@ -23,9 +23,23 @@ interface ProductoCarrito {
 }
 
 export function ProductoSelector({ value, onChange }: ProductoSelectorProps) {
-  const [productos, setProductos] = useState<Producto[]>([]);
   const [busqueda, setBusqueda] = useState('');
-  const [cargando, setCargando] = useState(true);
+
+  // Usar store de Zustand para productos con sincronización en tiempo real
+  const {
+    productos: todosProductos,
+    loading: cargando,
+    initializeRealtime,
+    getProductosDisponibles,
+  } = useProductosStore();
+
+  // Inicializar escucha en tiempo real al montar
+  useEffect(() => {
+    initializeRealtime();
+  }, [initializeRealtime]);
+
+  // Obtener productos disponibles del store
+  const productos = getProductosDisponibles();
 
   // Usar value del prop en lugar de estado local
   // Convertir ItemCarrito[] a ProductoCarrito[] para compatibilidad interna
@@ -37,31 +51,6 @@ export function ProductoSelector({ value, onChange }: ProductoSelectorProps) {
     precioUnitario: item.precio || item.precioUnitario,
     subtotal: item.subtotal,
   }));
-
-  // Cargar productos
-  useEffect(() => {
-    const cargarProductos = async () => {
-      try {
-        setCargando(true);
-        // Cargar todos los productos y filtrar en cliente
-        // Esto evita requerir índice compuesto en Firestore
-        const productosData = await productosService.getAll();
-
-        // Filtrar y ordenar en el cliente
-        const productosDisponibles = productosData
-          .filter(p => p.disponible)
-          .sort((a, b) => (a.orden || 0) - (b.orden || 0));
-
-        setProductos(productosDisponibles);
-      } catch (error) {
-        console.error('Error al cargar productos:', error);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    cargarProductos();
-  }, []);
 
   // Filtrar productos por búsqueda
   const productosFiltrados = productos.filter((producto) =>

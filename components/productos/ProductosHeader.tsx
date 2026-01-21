@@ -7,7 +7,7 @@
 
 'use client';
 
-import { Search, Grid3x3, List, Plus } from 'lucide-react';
+import { Search, Grid3x3, List, Plus, FileSpreadsheet } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -20,6 +20,7 @@ interface ProductosHeaderProps {
   busqueda: string;
   onBusquedaChange: (busqueda: string) => void;
   onNuevoProducto: () => void;
+  onImportExport?: () => void;
 }
 
 export default function ProductosHeader({
@@ -30,6 +31,7 @@ export default function ProductosHeader({
   busqueda,
   onBusquedaChange,
   onNuevoProducto,
+  onImportExport,
 }: ProductosHeaderProps) {
   return (
     <div className="space-y-4">
@@ -44,19 +46,28 @@ export default function ProductosHeader({
           </p>
         </div>
 
-        {/* Botón Nuevo Producto */}
-        <div className='flex gap-2'>
+        {/* Botones de acción */}
+        <div className='flex flex-wrap gap-2'>
+          {onImportExport && (
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2"
+              onClick={onImportExport}
+            >
+              <FileSpreadsheet className="h-5 w-5" />
+              Import/Export
+            </Button>
+          )}
           <Button size="lg" className="gap-2" onClick={onNuevoProducto}>
             <Plus className="h-5 w-5" />
             Nuevo Producto
           </Button>
           <Link href={'/productos/categorias'}>
-            <Button size="lg" className="gap-2">
-              <Plus className="h-5 w-5" />
-              Nueva Categoria
+            <Button size="lg" variant="outline" className="gap-2">
+              Categorías
             </Button>
           </Link>
-
         </div>
 
       </div>

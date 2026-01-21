@@ -28,6 +28,7 @@ import {
   EyeOff,
   Info,
   Edit,
+  Copy,
   Image as ImageIcon,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -39,6 +40,7 @@ interface ProductoDetalleProps {
   open: boolean;
   onClose: () => void;
   onEdit?: (producto: Producto) => void;
+  onDuplicar?: (producto: Producto) => void;
 }
 
 export function ProductoDetalle({
@@ -46,6 +48,7 @@ export function ProductoDetalle({
   open,
   onClose,
   onEdit,
+  onDuplicar,
 }: ProductoDetalleProps) {
   if (!producto) return null;
 
@@ -72,17 +75,31 @@ export function ProductoDetalle({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Detalles del Producto</span>
-            {onEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(producto)}
-                className="gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Editar
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {onDuplicar && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDuplicar(producto)}
+                  className="gap-2"
+                  title="Duplicar producto"
+                >
+                  <Copy className="h-4 w-4" />
+                  Duplicar
+                </Button>
+              )}
+              {onEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(producto)}
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Editar
+                </Button>
+              )}
+            </div>
           </DialogTitle>
         </DialogHeader>
 

@@ -291,6 +291,44 @@ export interface Producto {
   // SEO
   etiquetas?: string[];
   ingredientes?: string[];
+
+  // Soft Delete
+  eliminado?: boolean;
+  fechaEliminacion?: Timestamp;
+  eliminadoPor?: string;
+
+  // Variantes (tamaños, extras)
+  tieneVariantes?: boolean;
+  variantes?: VarianteProducto[];
+
+  // Audit Log
+  historialCambios?: CambioProducto[];
+}
+
+/**
+ * Variante de producto (tamaños, extras, etc.)
+ */
+export interface VarianteProducto {
+  id: string;
+  nombre: string; // Ej: "Grande", "Mediano", "Con extra queso"
+  tipo: 'tamaño' | 'extra' | 'personalizado';
+  precio: number; // Precio de esta variante (puede ser diferente al base)
+  precioDiferencia?: number; // Diferencia respecto al precio base (+/-)
+  disponible: boolean;
+  orden: number;
+}
+
+/**
+ * Registro de cambio en producto (para audit log)
+ */
+export interface CambioProducto {
+  fecha: Timestamp;
+  usuarioId: string;
+  usuarioNombre: string;
+  campo: string;
+  valorAnterior: any;
+  valorNuevo: any;
+  accion: 'crear' | 'actualizar' | 'eliminar' | 'restaurar';
 }
 
 // ============================================================================

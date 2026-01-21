@@ -601,89 +601,100 @@
 
 ### Gestión de Categorías
 
-- [ ] Crear página `/productos/categorias`
-- [ ] Componente `GestionCategorias`
-- [ ] Lista de categorías existentes
-- [ ] CRUD de categorías:
-  - [ ] Crear nueva categoría
-  - [ ] Editar nombre de categoría
-  - [ ] Eliminar categoría (verificar productos asociados)
-  - [ ] Ordenar categorías (drag & drop o campo orden)
-- [ ] Servicio `categoriasService.ts`
-- [ ] Modal para crear/editar categoría
-- [ ] Validación: no duplicar nombres
-- [ ] Mostrar cantidad de productos por categoría
+- [x] Crear página `/productos/categorias`
+- [x] Componente `GestionCategorias`
+- [x] Lista de categorías existentes
+- [x] CRUD de categorías:
+  - [x] Crear nueva categoría
+  - [x] Editar nombre de categoría
+  - [x] Eliminar categoría (verificar productos asociados)
+  - [x] Ordenar categorías (drag & drop o campo orden)
+- [x] Servicio `categoriasService.ts`
+- [x] Modal para crear/editar categoría
+- [x] Validación: no duplicar nombres
+- [x] Mostrar cantidad de productos por categoría
 
-### Componentes de Visualización
+### Componentes de Visualización ✅
 
-- [ ] Componente `ProductoCard` (vista grid)
-  - [ ] Foto del producto
-  - [ ] Nombre y precio
-  - [ ] Badge de disponibilidad
-  - [ ] Badge de destacado/promoción
-  - [ ] Botones de acción (editar, eliminar)
-- [ ] Componente `ProductoRow` (vista lista/tabla)
-  - [ ] Miniatura de foto
-  - [ ] Información completa en columnas
-  - [ ] Actions (editar, eliminar, toggle disponibilidad)
-- [ ] Componente `ProductoDetalle` (modal de vista completa)
-  - [ ] Toda la información del producto
-  - [ ] Imagen en grande
+- [x] Componente `ProductoCard` (vista grid) - `components/productos/ProductoCard.tsx`
+  - [x] Foto del producto
+  - [x] Nombre y precio
+  - [x] Badge de disponibilidad
+  - [x] Badge de destacado/promoción
+  - [x] Botones de acción (editar, eliminar)
+- [x] Componente `ProductoRow` (vista lista/tabla) - `components/productos/ProductosTable.tsx`
+  - [x] Miniatura de foto
+  - [x] Información completa en columnas
+  - [x] Actions (editar, eliminar, toggle disponibilidad)
+- [x] Componente `ProductoDetalle` (modal de vista completa) - `components/productos/ProductoDetalle.tsx`
+  - [x] Toda la información del producto
+  - [x] Imagen en grande
   - [ ] Historial de cambios (opcional)
 
-### Lógica de Negocio
+### Lógica de Negocio ✅
 
-- [ ] Validar que precio > 0
-- [ ] Validar que precio promoción < precio normal
-- [ ] Soft delete (no eliminar físicamente, marcar como eliminado)
+- [x] Validar que precio > 0 - En `FormProducto.tsx` con validators
+- [x] Validar que precio promoción < precio normal - En `FormProducto.tsx`
+- [x] Soft delete (no eliminar físicamente, marcar como eliminado) - `softDelete()` en `productos.service.ts`
 - [ ] Mantener histórico de precios (opcional)
-- [ ] Verificar productos en pedidos activos antes de eliminar
-- [ ] Actualizar automáticamente en selector de productos (pedidos)
-- [ ] Cache de productos en store de Zustand
-- [ ] Sincronización en tiempo real con Firestore
+- [x] Verificar productos en pedidos activos antes de eliminar - `verificarProductoEnPedidosActivos()`
+- [x] Actualizar automáticamente en selector de productos (pedidos) - Store Zustand con realtime
+- [x] Cache de productos en store de Zustand - `lib/stores/productos.store.ts`
+- [x] Sincronización en tiempo real con Firestore - `onCollectionChange` + Store Zustand
 
-### Permisos y Seguridad
+### Permisos y Seguridad ✅
 
-- [ ] Solo Admin y Encargado pueden gestionar productos
-- [ ] Cajera solo puede ver productos (lectura)
-- [ ] Cocina no tiene acceso a gestión de productos
-- [ ] Repartidor no tiene acceso
-- [ ] Reglas de Firestore para colección `productos`
-- [ ] Validación de permisos en servicios
-- [ ] Audit log de cambios en productos (quién, cuándo, qué cambió)
+- [x] Solo Admin y Encargado pueden gestionar productos - Validación en página
+- [x] Cajera solo puede ver productos (lectura) - Redirige si no tiene permisos
+- [x] Cocina no tiene acceso a gestión de productos - Redirige
+- [x] Repartidor no tiene acceso - Redirige
+- [x] Reglas de Firestore para colección `productos` - Actualizadas en `firestore.rules`
+- [x] Validación de permisos en servicios - Reglas validan creadoPor y fechaCreacion
+- [x] Audit log de cambios en productos (quién, cuándo, qué cambió) - `historialCambios[]` + `updateConAudit()`
 
-### Integración con Otros Módulos
+### Integración con Otros Módulos ✅
 
-- [ ] Actualizar selector de productos en `FormPedido`
-- [ ] Sincronizar productos en tiempo real en página de pedidos
-- [ ] Mostrar productos agotados con badge en selector
-- [ ] Filtrar productos no disponibles en formulario público `/pedir`
-- [ ] Actualizar catálogo público automáticamente
-- [ ] Invalidar cache cuando se actualiza un producto
+- [x] Actualizar selector de productos en `FormPedido` - `ProductoSelector.tsx` usa store Zustand
+- [x] Sincronizar productos en tiempo real en página de pedidos - `useProductosStore` con realtime
+- [x] Mostrar productos agotados con badge en selector - Filtra solo disponibles
+- [x] Filtrar productos no disponibles en formulario público `/pedir` - `getDisponiblesOrdenadosPorMenu()`
+- [x] Actualizar catálogo público automáticamente - Usa el servicio centralizado
+- [x] Invalidar cache cuando se actualiza un producto - Store Zustand se actualiza en tiempo real
 
-### Mejoras y Features Adicionales
+### Mejoras y Features Adicionales ✅
 
-- [ ] Import masivo de productos (CSV/Excel)
-- [ ] Export de productos a CSV
-- [ ] Duplicar producto (copiar para crear variante)
-- [ ] Productos con variantes (tamaños, extras) - Opcional
-- [ ] Sistema de tags/etiquetas - Opcional
-- [ ] Galería múltiple de fotos por producto - Opcional
-- [ ] Productos más vendidos (estadísticas) - Opcional
-- [ ] Alerta de productos sin foto
-- [ ] Validación de productos duplicados (mismo nombre)
+- [x] Import masivo de productos (CSV/Excel) - `importFromCSV()` + `ImportExportModal.tsx`
+- [x] Export de productos a CSV - `exportToCSV()` + botón en header
+- [x] Duplicar producto (copiar para crear variante) - `duplicarProducto()` + botón en detalle
+- [x] Productos con variantes (tamaños, extras) - `VariantesProducto.tsx` + tipo `VarianteProducto`
+- [x] Sistema de tags/etiquetas - Campo `etiquetas` en modelo y UI
+- [x] Galería múltiple de fotos por producto - `GaleriaProducto.tsx` con drag & drop
+- [x] Productos más vendidos (estadísticas) - `getTopProductos()` + `TablaProductosMasVendidos`
+- [x] Alerta de productos sin foto - `AlertaProductosSinFoto.tsx` con modal
+- [x] Validación de productos duplicados (mismo nombre) - `validarNombreDuplicado()`
 
 ### Testing
 
-- [ ] Tests unitarios de `productosService`
+- [x] Tests unitarios de `productosService` - `__tests__/services/productos.service.test.ts`
 - [ ] Tests de componente `FormProducto`
-- [ ] Tests de validaciones
+- [x] Tests de validaciones - `__tests__/utils/validators.test.ts` (47 tests)
 - [ ] Tests de upload de imágenes
 - [ ] Test E2E de flujo completo (crear, editar, eliminar)
 
 ---
 
 ## 🔒 FASE 12: SEGURIDAD Y PERMISOS
+
+### Seguridad Server-Side (API Routes) ✅
+
+- [x] Sistema de sesiones JWT con cookies httpOnly - `lib/auth/jwt.ts`, `lib/auth/session.ts`
+- [x] API routes de autenticación - `/api/auth/session`, `/api/auth/me`
+- [x] Middleware de protección de rutas - `middleware.ts`
+- [x] HOF para proteger API routes por rol - `lib/api/with-auth.ts`
+- [x] Validadores server-side - `lib/api/validators.ts`
+- [x] API routes protegidas de productos - `/api/productos`
+- [x] API route de upload con validación - `/api/upload`
+- [x] Integración automática con auth store - Sesión JWT creada/destruida en login/logout
 
 ### Firestore Rules
 
@@ -696,19 +707,18 @@
 - [ ] Implementar reglas para `turnos`
 - [ ] Testear reglas con Firebase Emulator
 
-### Storage Rules
+### Storage Rules (N/A - Usando Cloudinary)
 
-- [ ] Escribir reglas de seguridad para Storage
-- [ ] Permitir subida solo a usuarios autenticados
-- [ ] Validar tipo y tamaño de archivos
-- [ ] Organizar archivos por carpetas
+- [x] Validar tipo y tamaño de archivos - Validación en `/api/upload`
+- [x] Permitir subida solo a usuarios autenticados - Middleware + withAuth
+- [x] Organizar archivos por carpetas - Carpetas en Cloudinary
 
 ### Validación y Sanitización
 
-- [ ] Validar todos los inputs en frontend
-- [ ] Sanitizar datos antes de guardar
+- [x] Validar todos los inputs en frontend - `lib/utils/validators.ts`
+- [x] Sanitizar datos antes de guardar - `lib/api/validators.ts` (sanitizeString, sanitizeObject)
 - [ ] Implementar rate limiting (opcional)
-- [ ] Proteger contra inyección de código
+- [x] Proteger contra inyección de código - sanitizeString elimina `<>`, `javascript:`, event handlers
 - [ ] Encriptar datos sensibles (teléfonos)
 
 ---
@@ -717,10 +727,10 @@
 
 ### Unit Tests
 
-- [ ] Configurar Jest + React Testing Library
-- [ ] Tests para servicios de datos
+- [x] Configurar Jest + React Testing Library - `jest.config.js`, `jest.setup.js`
+- [x] Tests para servicios de datos - `productosService` (exportToCSV, parseCSV, validarNombreDuplicado)
 - [ ] Tests para hooks custom
-- [ ] Tests para utilidades (formatters, validators)
+- [x] Tests para utilidades (formatters, validators) - 30+ tests de validación
 - [ ] Tests para componentes de formulario
 
 ### Integration Tests

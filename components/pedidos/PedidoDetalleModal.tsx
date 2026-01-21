@@ -39,11 +39,16 @@ interface PedidoDetalleModalProps {
 }
 
 const ESTADOS_CONFIG: Record<
-  EstadoPedido,
+  string,
   { label: string; color: string; icon: React.ReactNode }
 > = {
   pendiente: {
     label: 'Pendiente',
+    color: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20',
+    icon: <Clock className="h-4 w-4" />,
+  },
+  recibido: {
+    label: 'Recibido',
     color: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20',
     icon: <Clock className="h-4 w-4" />,
   },
@@ -72,6 +77,13 @@ const ESTADOS_CONFIG: Record<
     color: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
     icon: <XCircle className="h-4 w-4" />,
   },
+};
+
+// Fallback para estados desconocidos
+const DEFAULT_ESTADO_CONFIG = {
+  label: 'Desconocido',
+  color: 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20',
+  icon: <Clock className="h-4 w-4" />,
 };
 
 export function PedidoDetalleModal({
@@ -122,7 +134,7 @@ export function PedidoDetalleModal({
 
   if (!pedido) return null;
 
-  const estadoConfig = ESTADOS_CONFIG[pedido.estado];
+  const estadoConfig = ESTADOS_CONFIG[pedido.estado] || DEFAULT_ESTADO_CONFIG;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
