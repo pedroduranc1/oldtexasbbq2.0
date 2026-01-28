@@ -5,12 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { clipService, ClipPaymentRequest, ClipApiError } from '@/lib/clip';
-import { verifySession } from '@/lib/auth/session';
+import { getSession } from '@/lib/auth/session';
 
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticación
-    const session = await verifySession(request);
+    const session = await getSession();
     if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
