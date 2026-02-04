@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ReactQueryProvider } from '@/lib/react-query/provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from 'sonner';
+import { baseMetadata, viewport as viewportConfig } from '@/lib/seo/config';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 
-export const metadata: Metadata = {
-  title: 'Old Texas BBQ - CRM',
-  description: 'Sistema de gestión integral para Old Texas BBQ',
-};
+export const metadata: Metadata = baseMetadata;
+export const viewport: Viewport = viewportConfig;
 
 export default function RootLayout({
   children,
@@ -16,7 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+      </head>
       <body>
+        <GoogleAnalytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

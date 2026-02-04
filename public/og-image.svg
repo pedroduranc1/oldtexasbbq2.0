@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#1a365d"/>
+
+  <!-- Decorative pattern -->
+  <g opacity="0.1">
+    <circle cx="100" cy="100" r="200" fill="#d69e2e"/>
+    <circle cx="1100" cy="530" r="250" fill="#d69e2e"/>
+  </g>
+
+  <!-- Logo area -->
+  <g transform="translate(100, 165)">
+    <!-- BBQ Grill -->
+    <rect x="0" y="100" width="300" height="200" rx="20" fill="#0f172a" stroke="#d69e2e" stroke-width="4"/>
+    <g stroke="#d69e2e" stroke-width="6" stroke-linecap="round">
+      <line x1="30" y1="150" x2="270" y2="150"/>
+      <line x1="30" y1="180" x2="270" y2="180"/>
+      <line x1="30" y1="210" x2="270" y2="210"/>
+      <line x1="30" y1="240" x2="270" y2="240"/>
+    </g>
+    <!-- Smoke -->
+    <g fill="none" stroke="#ffffff" stroke-width="4" opacity="0.5">
+      <path d="M75 80 Q90 40, 75 0 Q60 -40, 75 -80"/>
+      <path d="M150 60 Q170 10, 150 -40 Q130 -90, 150 -120"/>
+      <path d="M225 80 Q240 40, 225 0 Q210 -40, 225 -80"/>
+    </g>
+  </g>
+
+  <!-- Text -->
+  <g fill="#ffffff">
+    <text x="500" y="250" font-family="Georgia, serif" font-size="72" font-weight="bold">
+      Old Texas BBQ
+    </text>
+    <text x="500" y="320" font-family="system-ui, sans-serif" font-size="36" fill="#d69e2e">
+      Sistema de Gestion Integral
+    </text>
+  </g>
+
+  <!-- Features -->
+  <g fill="#94a3b8" font-family="system-ui, sans-serif" font-size="24">
+    <text x="500" y="420">Pedidos en tiempo real</text>
+    <text x="500" y="460">Cocina y reparto coordinados</text>
+    <text x="500" y="500">Reportes y metricas</text>
+  </g>
+
+  <!-- Footer -->
+  <rect x="0" y="580" width="1200" height="50" fill="#0f172a"/>
+  <text x="600" y="612" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="#64748b">
+    crm.oldtexasbbq.com
+  </text>
+</svg>

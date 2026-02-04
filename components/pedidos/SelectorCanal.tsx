@@ -7,7 +7,6 @@ import {
   Car,
   Bike,
   Phone,
-  Globe,
   LucideIcon
 } from 'lucide-react';
 
@@ -66,19 +65,11 @@ const canales: CanalOption[] = [
     bgColor: 'bg-amber-50 hover:bg-amber-100 border-amber-200',
     description: 'Pedido telefónico',
   },
-  {
-    value: 'web',
-    label: 'Sitio Web',
-    icon: Globe,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50 hover:bg-purple-100 border-purple-200',
-    description: 'Pedido desde el sitio web',
-  },
 ];
 
 export function SelectorCanal({ value, onChange }: SelectorCanalProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {canales.map((canal) => {
         const Icon = canal.icon;
         const isSelected = value === canal.value;

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" fill="#1a365d"/>
+  <g stroke="#d69e2e" stroke-width="3" stroke-linecap="round">
+    <line x1="35" y1="100" x2="145" y2="100"/>
+    <line x1="35" y1="110" x2="145" y2="110"/>
+    <line x1="35" y1="120" x2="145" y2="120"/>
+    <line x1="35" y1="130" x2="145" y2="130"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6">
+    <path d="M52 85 Q56 70, 52 55 Q48 40, 52 25"/>
+    <path d="M90 78 Q95 60, 90 45 Q85 30, 90 15"/>
+    <path d="M128 85 Q132 70, 128 55 Q124 40, 128 25"/>
+  </g>
+  <text x="90" y="162" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-weight="bold" fill="#d69e2e">OT</text>
+</svg>

@@ -1,0 +1,80 @@
+{
+  "name": "Old Texas BBQ CRM",
+  "short_name": "OT BBQ CRM",
+  "description": "Sistema de gestión integral para Old Texas BBQ. Pedidos, cocina, reparto y administración.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a365d",
+  "theme_color": "#1a365d",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "es-MX",
+  "categories": ["business", "productivity", "food"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard principal"
+    },
+    {
+      "src": "/screenshots/pedidos-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Lista de pedidos en móvil"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo Pedido",
+      "short_name": "Pedido",
+      "description": "Crear un nuevo pedido",
+      "url": "/pedidos/nuevo",
+      "icons": [{ "src": "/icons/new-order.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Cocina",
+      "short_name": "Cocina",
+      "description": "Ver tablero de cocina",
+      "url": "/cocina",
+      "icons": [{ "src": "/icons/kitchen.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Reparto",
+      "short_name": "Reparto",
+      "description": "Panel de repartidores",
+      "url": "/reparto",
+      "icons": [{ "src": "/icons/delivery.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
