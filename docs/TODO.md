@@ -882,6 +882,738 @@
 - [ ] Actualizar dependencias
 - [ ] Backups automáticos de Firestore
 
+---
+
+## 📦 FASE 17: SISTEMA DE INVENTARIO Y CONTROL DE COSTOS
+
+### Contexto
+
+Sistema completo de gestión de inventario basado en el archivo "Costeo de recetas.xlsx" que contiene:
+- **50+ ingredientes** con categorías, unidades y precios
+- **Recetas detalladas** de todos los productos del menú (Burgers, Parrilla, Freidora, etc.)
+- **Subrecetas** (ingredientes compuestos como carne hamburguesa, salsas, marinados)
+- **Modificadores** de platillos con costos exactos
+- **Estructura completa** de costos y márgenes
+
+### Modelo de Datos Firestore
+
+#### 1. Colección `ingredientes`
+
+- [ ] Diseñar schema de ingredientes
+```typescript
+interface Ingrediente {
+  id: string;
+  nombre: string;
+  categoria: 'BEBIDAS' | 'ABARROTES' | 'SALSAS Y ADEREZOS' | 'VERDURAS' |
+             'ESPECIAS' | 'INSUMOS EMPAQUE' | 'PROTEINAS' | 'CONGELADOS' |
+             'POSTRES' | 'INSUMOS PREPRODUCCION';
+  unidadMedida: 'KILO' | 'LITRO' | 'PIEZA' | 'GRAMO' | 'MILILITRO';
+  precioPorUnidad: number;
+  stockActual: number;
+  stockMinimo: number;
+  stockMaximo: number;
+  proveedor?: {
+    id: string;
+    nombre: string;
+    contacto: string;
+  };
+  ubicacion?: string; // Almacén, Refrigerador, Congelador
+  lote?: string;
+  fechaVencimiento?: Timestamp;
+  activo: boolean;
+  creadoPor: string;
+  fechaCreacion: Timestamp;
+  ultimaActualizacion: Timestamp;
+  ultimaCompra?: {
+    fecha: Timestamp;
+    cantidad: number;
+    precioTotal: number;
+  };
+}
+```
+
+#### 2. Colección `recetas`
+
+- [ ] Diseñar schema de recetas
+```typescript
+interface Receta {
+  id: string;
+  nombre: string;
+  productoId: string; // Referencia a producto del menú
+  categoria: 'BURGERS' | 'PARRILLA' | 'FREIDORA' | 'GUARNICIONES' | 'SALSAS' | 'SUBRECETAS';
+  ingredientes: Array<{
+    ingredienteId: string;
+    ingredienteNombre: string;
+    cantidad: number;
+    unidadMedida: string;
+    costoUnitario: number;
+    costoTotal: number;
+  }>;
+  costoTotal: number; // Suma de todos los ingredientes
+  rendimiento?: number; // Cuántas porciones produce
+  esSubreceta: boolean; // Si es ingrediente compuesto
+  tiempoPreparacion?: number; // Minutos
+  instrucciones?: string;
+  activo: boolean;
+  creadoPor: string;
+  fechaCreacion: Timestamp;
+  ultimaActualizacion: Timestamp;
+}
+```
+
+#### 3. Colección `movimientos_inventario`
+
+- [ ] Diseñar schema de movimientos
+```typescript
+interface MovimientoInventario {
+  id: string;
+  tipo: 'ENTRADA' | 'SALIDA' | 'AJUSTE' | 'MERMA' | 'TRASPASO' | 'VENTA';
+  ingredienteId: string;
+  ingredienteNombre: string;
+  cantidad: number;
+  unidadMedida: string;
+  stockAnterior: number;
+  stockNuevo: number;
+  costoUnitario?: number;
+  costoTotal?: number;
+  motivo: string;
+  referencia?: string; // ID de pedido, compra, etc.
+  usuarioId: string;
+  usuarioNombre: string;
+  fecha: Timestamp;
+  notas?: string;
+  proveedor?: {
+    id: string;
+    nombre: string;
+  };
+  documentoCompra?: string; // Número de factura
+}
+```
+
+#### 4. Colección `ordenes_compra`
+
+- [ ] Diseñar schema de órdenes de compra
+```typescript
+interface OrdenCompra {
+  id: string;
+  numeroOrden: number;
+  proveedorId: string;
+  proveedorNombre: string;
+  items: Array<{
+    ingredienteId: string;
+    ingredienteNombre: string;
+    cantidadSolicitada: number;
+    cantidadRecibida?: number;
+    unidadMedida: string;
+    precioUnitario: number;
+    subtotal: number;
+  }>;
+  subtotal: number;
+  iva: number;
+  total: number;
+  estado: 'PENDIENTE' | 'APROBADA' | 'ENVIADA' | 'RECIBIDA' | 'CANCELADA';
+  fechaSolicitud: Timestamp;
+  fechaEntregaEstimada?: Timestamp;
+  fechaRecepcion?: Timestamp;
+  solicitadoPor: string;
+  aprobadoPor?: string;
+  recibidoPor?: string;
+  notas?: string;
+  documentoFactura?: string;
+}
+```
+
+#### 5. Colección `proveedores`
+
+- [ ] Diseñar schema de proveedores
+```typescript
+interface Proveedor {
+  id: string;
+  nombre: string;
+  razonSocial: string;
+  rfc?: string;
+  contacto: {
+    nombre: string;
+    telefono: string;
+    email: string;
+  };
+  direccion?: string;
+  categorias: string[]; // Qué tipo de productos provee
+  activo: boolean;
+  calificacion?: number;
+  tiempoEntrega?: number; // Días promedio
+  notas?: string;
+  creadoPor: string;
+  fechaCreacion: Timestamp;
+}
+```
+
+#### 6. Colección `conteo_fisico`
+
+- [ ] Diseñar schema de inventarios físicos
+```typescript
+interface ConteoFisico {
+  id: string;
+  fecha: Timestamp;
+  tipo: 'COMPLETO' | 'PARCIAL' | 'CICLICO';
+  estado: 'EN_PROCESO' | 'COMPLETADO' | 'REVISADO';
+  conteos: Array<{
+    ingredienteId: string;
+    ingredienteNombre: string;
+    stockSistema: number;
+    stockFisico: number;
+    diferencia: number;
+    valorDiferencia: number;
+    motivo?: string;
+    ajustado: boolean;
+  }>;
+  totalDiferencias: number;
+  valorTotalDiferencias: number;
+  realizadoPor: string;
+  revisadoPor?: string;
+  notas?: string;
+  fechaInicio: Timestamp;
+  fechaFin?: Timestamp;
+}
+```
+
+---
+
+### Servicios de Datos (CRUD)
+
+#### Ingredientes ✅
+
+- [x] Crear `ingredientesService.ts`
+  - [x] `createIngrediente(ingrediente)` - Crear ingrediente
+  - [x] `updateIngrediente(id, data)` - Actualizar ingrediente
+  - [x] `deleteIngrediente(id)` - Eliminar (soft delete)
+  - [x] `getIngredientes(filtros?)` - Obtener todos con filtros
+  - [x] `getIngredienteById(id)` - Obtener por ID
+  - [x] `searchIngredientes(query)` - Búsqueda por nombre
+  - [x] `getIngredientesByCategoria(categoria)` - Filtrar por categoría
+  - [x] `getIngredientesStockBajo()` - Stock bajo del mínimo
+  - [x] `getIngredientesSinStock()` - Sin stock
+  - [x] `updateStock(id, cantidad, tipo)` - Actualizar stock
+  - [x] `verificarDisponibilidad(ingredienteId, cantidadNecesaria)` - Verificar stock
+
+#### Recetas ✅
+
+- [x] Crear `recetasService.ts`
+  - [x] `createReceta(receta)` - Crear receta
+  - [x] `updateReceta(id, data)` - Actualizar receta
+  - [x] `deleteReceta(id)` - Eliminar receta
+  - [x] `getRecetas(filtros?)` - Obtener todas
+  - [x] `getRecetaByProductoId(productoId)` - Receta de un producto
+  - [x] `calcularCostoReceta(recetaId)` - Calcular costo total
+  - [x] `verificarStockReceta(recetaId)` - Verificar ingredientes disponibles
+  - [x] `getSubrecetas()` - Obtener subrecetas
+  - [x] `importRecetasFromExcel(file)` - Importar desde Excel (placeholder)
+
+#### Movimientos de Inventario
+
+- [ ] Crear `movimientosService.ts`
+  - [ ] `registrarEntrada(ingredienteId, cantidad, datos)` - Entrada (compra)
+  - [ ] `registrarSalida(ingredienteId, cantidad, datos)` - Salida (consumo)
+  - [ ] `registrarAjuste(ingredienteId, nuevoStock, motivo)` - Ajuste manual
+  - [ ] `registrarMerma(ingredienteId, cantidad, motivo)` - Merma
+  - [ ] `registrarVenta(pedidoId, receta)` - Descontar por venta
+  - [ ] `getMovimientos(filtros)` - Historial de movimientos
+  - [ ] `getMovimientosByIngrediente(ingredienteId, rango?)` - Movimientos de un ingrediente
+  - [ ] `getMovimientosByFecha(inicio, fin)` - Por rango de fechas
+  - [ ] `calcularConsumoPromedio(ingredienteId, dias)` - Consumo promedio
+
+#### Órdenes de Compra
+
+- [ ] Crear `ordenesCompraService.ts`
+  - [ ] `createOrdenCompra(orden)` - Crear orden
+  - [ ] `updateOrdenCompra(id, data)` - Actualizar orden
+  - [ ] `aprobarOrden(id, aprobadoPor)` - Aprobar orden
+  - [ ] `recibirOrden(id, cantidades, recibidoPor)` - Marcar como recibida
+  - [ ] `cancelarOrden(id, motivo)` - Cancelar orden
+  - [ ] `getOrdenes(filtros)` - Obtener órdenes
+  - [ ] `getOrdenById(id)` - Obtener por ID
+  - [ ] `generarOrdenSugerida()` - Generar orden automática (stock bajo)
+
+#### Proveedores
+
+- [ ] Crear `proveedoresService.ts`
+  - [ ] `createProveedor(proveedor)` - Crear proveedor
+  - [ ] `updateProveedor(id, data)` - Actualizar proveedor
+  - [ ] `deleteProveedor(id)` - Eliminar (soft delete)
+  - [ ] `getProveedores(filtros?)` - Obtener todos
+  - [ ] `getProveedorById(id)` - Obtener por ID
+  - [ ] `getProveedoresByCategoria(categoria)` - Por categoría
+
+#### Conteo Físico
+
+- [ ] Crear `conteoFisicoService.ts`
+  - [ ] `iniciarConteo(tipo)` - Iniciar inventario físico
+  - [ ] `registrarConteo(conteoId, ingredienteId, stockFisico)` - Registrar conteo
+  - [ ] `finalizarConteo(conteoId)` - Finalizar conteo
+  - [ ] `aplicarAjustes(conteoId)` - Aplicar diferencias al stock
+  - [ ] `getConteos(filtros)` - Historial de conteos
+  - [ ] `getConteoById(id)` - Obtener conteo por ID
+
+---
+
+### Componentes UI
+
+#### Gestión de Ingredientes
+
+- [ ] Crear página `/inventario/ingredientes`
+- [ ] Componente `ListaIngredientes`
+  - [ ] Vista tabla con todos los ingredientes
+  - [ ] Columnas: Nombre, Categoría, Stock Actual, Stock Mínimo, Precio, Estado
+  - [ ] Filtros: Categoría, Stock (todos/bajo/sin stock), Búsqueda
+  - [ ] Ordenamiento: Nombre, Stock, Precio, Categoría
+  - [ ] Paginación
+  - [ ] Botones de acción: Ver, Editar, Eliminar
+  - [ ] Indicador visual de stock bajo (amarillo) y sin stock (rojo)
+  - [ ] Badge de alerta en ingredientes con stock bajo
+
+- [ ] Componente `FormIngrediente`
+  - [ ] Modal para crear/editar ingrediente
+  - [ ] Campos: Nombre, Categoría, Unidad, Precio, Stock Actual, Stock Min/Max
+  - [ ] Selector de proveedor
+  - [ ] Campo de ubicación (almacén, refrigerador, etc.)
+  - [ ] Validaciones: Campos requeridos, stock >= 0, precios > 0
+  - [ ] Preview de información
+  - [ ] Loading states
+
+- [ ] Componente `DetalleIngrediente`
+  - [ ] Modal con información completa
+  - [ ] Gráfica de movimientos recientes
+  - [ ] Historial de compras
+  - [ ] Consumo promedio
+  - [ ] Proyección de stock (cuántos días queda)
+  - [ ] Botón para registrar movimiento rápido
+
+- [ ] Componente `AlertasInventario`
+  - [ ] Panel de alertas en dashboard
+  - [ ] Lista de ingredientes con stock bajo
+  - [ ] Lista de ingredientes sin stock
+  - [ ] Ingredientes próximos a vencer
+  - [ ] Botón "Generar Orden de Compra" automática
+
+#### Gestión de Recetas
+
+- [ ] Crear página `/inventario/recetas`
+- [ ] Componente `ListaRecetas`
+  - [ ] Vista tabla de todas las recetas
+  - [ ] Columnas: Producto, Categoría, Costo Total, # Ingredientes
+  - [ ] Filtros: Categoría, Disponibilidad
+  - [ ] Búsqueda por nombre de producto
+  - [ ] Badge de "Sin stock" si falta algún ingrediente
+
+- [ ] Componente `FormReceta`
+  - [ ] Modal para crear/editar receta
+  - [ ] Selector de producto del menú
+  - [ ] Lista dinámica de ingredientes
+  - [ ] Búsqueda de ingredientes con autocomplete
+  - [ ] Input de cantidad con unidad de medida
+  - [ ] Cálculo automático de costo por ingrediente
+  - [ ] Cálculo automático de costo total
+  - [ ] Margen de ganancia calculado
+  - [ ] Validaciones: Al menos 1 ingrediente, cantidades > 0
+
+- [ ] Componente `DetalleReceta`
+  - [ ] Modal con receta completa
+  - [ ] Lista de ingredientes con cantidades
+  - [ ] Costo desglosado por ingrediente
+  - [ ] Costo total calculado
+  - [ ] Precio de venta
+  - [ ] Margen de ganancia (%)
+  - [ ] Estado de disponibilidad (si hay suficiente stock)
+  - [ ] Botón "Verificar Stock"
+
+- [ ] Componente `ImportarRecetas`
+  - [ ] Modal para importar desde Excel
+  - [ ] Drag & drop de archivo
+  - [ ] Preview de datos a importar
+  - [ ] Mapeo de columnas
+  - [ ] Validación de datos
+  - [ ] Barra de progreso
+  - [ ] Reporte de errores/éxitos
+
+#### Movimientos de Inventario
+
+- [ ] Crear página `/inventario/movimientos`
+- [ ] Componente `RegistrarMovimiento`
+  - [ ] Modal para registrar entrada/salida/ajuste
+  - [ ] Selector de tipo de movimiento
+  - [ ] Selector de ingrediente
+  - [ ] Input de cantidad
+  - [ ] Campo de motivo/notas
+  - [ ] Referencia (orden de compra, pedido, etc.)
+  - [ ] Selector de proveedor (si es entrada)
+  - [ ] Cálculo automático de nuevo stock
+  - [ ] Preview de impacto en stock
+
+- [ ] Componente `HistorialMovimientos`
+  - [ ] Tabla con todos los movimientos
+  - [ ] Columnas: Fecha, Tipo, Ingrediente, Cantidad, Usuario, Motivo
+  - [ ] Filtros: Tipo, Ingrediente, Fecha, Usuario
+  - [ ] Badge de color por tipo (verde=entrada, rojo=salida, azul=ajuste)
+  - [ ] Búsqueda por ingrediente
+  - [ ] Exportar a Excel/CSV
+  - [ ] Paginación
+
+- [ ] Componente `TablaConsumo`
+  - [ ] Vista de consumo por período
+  - [ ] Filtros: Fecha (diario, semanal, mensual)
+  - [ ] Columnas: Ingrediente, Consumo Total, Consumo Promedio, Stock Actual
+  - [ ] Gráficas de tendencia
+  - [ ] Exportar reporte
+
+#### Órdenes de Compra
+
+- [ ] Crear página `/inventario/compras`
+- [ ] Componente `ListaOrdenes`
+  - [ ] Tabla con todas las órdenes
+  - [ ] Columnas: #Orden, Proveedor, Total, Estado, Fecha
+  - [ ] Filtros: Estado, Proveedor, Rango de fechas
+  - [ ] Badge de estado con colores
+  - [ ] Acciones: Ver, Editar, Aprobar, Recibir, Cancelar
+
+- [ ] Componente `FormOrdenCompra`
+  - [ ] Modal para crear/editar orden
+  - [ ] Selector de proveedor
+  - [ ] Lista dinámica de ingredientes a comprar
+  - [ ] Búsqueda y selección de ingredientes
+  - [ ] Input de cantidad y precio
+  - [ ] Cálculo automático de subtotal
+  - [ ] Cálculo de IVA y total
+  - [ ] Campo de fecha de entrega estimada
+  - [ ] Notas adicionales
+  - [ ] Preview de orden antes de crear
+
+- [ ] Componente `DetalleOrden`
+  - [ ] Modal con información completa de la orden
+  - [ ] Información del proveedor
+  - [ ] Lista de items con cantidades y precios
+  - [ ] Totales desglosados
+  - [ ] Estado actual
+  - [ ] Historial de cambios de estado
+  - [ ] Botones de acción según estado
+  - [ ] Imprimir orden de compra (PDF)
+
+- [ ] Componente `RecibirOrden`
+  - [ ] Modal para recibir orden
+  - [ ] Lista de items esperados vs recibidos
+  - [ ] Input de cantidad recibida por item
+  - [ ] Verificación de diferencias
+  - [ ] Notas de recepción
+  - [ ] Actualización automática de stock
+  - [ ] Subir foto de factura/remisión
+
+- [ ] Componente `OrdenSugerida`
+  - [ ] Modal con orden de compra automática
+  - [ ] Ingredientes con stock bajo
+  - [ ] Cantidad sugerida (para llegar a stock máximo)
+  - [ ] Agrupado por proveedor
+  - [ ] Editar cantidades antes de crear
+  - [ ] Botón "Crear Orden(es)"
+
+#### Proveedores
+
+- [ ] Crear página `/inventario/proveedores`
+- [ ] Componente `ListaProveedores`
+  - [ ] Tabla de proveedores
+  - [ ] Columnas: Nombre, Contacto, Teléfono, Categorías, Estado
+  - [ ] Filtros: Categoría, Estado (activo/inactivo)
+  - [ ] Búsqueda por nombre
+  - [ ] Acciones: Ver, Editar, Eliminar
+
+- [ ] Componente `FormProveedor`
+  - [ ] Modal para crear/editar proveedor
+  - [ ] Campos: Nombre, Razón Social, RFC
+  - [ ] Información de contacto (nombre, teléfono, email)
+  - [ ] Dirección
+  - [ ] Multi-selector de categorías
+  - [ ] Calificación (estrellas)
+  - [ ] Tiempo de entrega promedio
+  - [ ] Notas adicionales
+  - [ ] Validaciones: Campos requeridos, formato de email
+
+- [ ] Componente `DetalleProveedor`
+  - [ ] Modal con información completa
+  - [ ] Datos generales
+  - [ ] Historial de órdenes de compra
+  - [ ] Gráfica de compras por mes
+  - [ ] Ingredientes que provee
+  - [ ] Calificación promedio
+  - [ ] Botón "Nueva Orden de Compra"
+
+#### Conteo Físico (Inventario Físico)
+
+- [ ] Crear página `/inventario/conteo`
+- [ ] Componente `IniciarConteo`
+  - [ ] Modal para iniciar nuevo conteo
+  - [ ] Selector de tipo (Completo, Parcial, Cíclico)
+  - [ ] Selector de categorías (si es parcial)
+  - [ ] Fecha y hora de inicio
+  - [ ] Responsable del conteo
+  - [ ] Notas iniciales
+
+- [ ] Componente `RegistrarConteo`
+  - [ ] Interfaz móvil-friendly para contar
+  - [ ] Lista de ingredientes a contar
+  - [ ] Búsqueda rápida de ingrediente
+  - [ ] Input grande de cantidad física
+  - [ ] Comparación con stock en sistema
+  - [ ] Indicador visual de diferencias
+  - [ ] Campo de motivo (si hay diferencia)
+  - [ ] Botón "Siguiente" para agilizar
+  - [ ] Progreso del conteo (% completado)
+
+- [ ] Componente `RevisarConteo`
+  - [ ] Modal con resumen del conteo
+  - [ ] Tabla de diferencias (solo items con diferencia)
+  - [ ] Columnas: Ingrediente, Sistema, Físico, Diferencia, Valor, Motivo
+  - [ ] Total de diferencias en cantidad y valor
+  - [ ] Filtros: Mostrar solo diferencias / Mostrar todos
+  - [ ] Botón "Aplicar Ajustes" (actualiza stock)
+  - [ ] Botón "Exportar Reporte"
+
+- [ ] Componente `HistorialConteos`
+  - [ ] Tabla de conteos realizados
+  - [ ] Columnas: Fecha, Tipo, Responsable, # Diferencias, Valor Diferencias
+  - [ ] Filtros: Tipo, Fecha, Responsable
+  - [ ] Ver detalle de cada conteo
+
+#### Dashboard de Inventario
+
+- [ ] Crear página `/inventario/dashboard`
+- [ ] Componente `DashboardInventario`
+  - [ ] Cards de métricas principales:
+    - [ ] Total de ingredientes
+    - [ ] Ingredientes con stock bajo
+    - [ ] Ingredientes sin stock
+    - [ ] Valor total del inventario
+    - [ ] Órdenes de compra pendientes
+    - [ ] Movimientos del día
+  - [ ] Gráfica de consumo por categoría
+  - [ ] Gráfica de tendencia de stock (últimos 30 días)
+  - [ ] Top 10 ingredientes más consumidos
+  - [ ] Top 10 ingredientes más costosos
+  - [ ] Alertas destacadas
+  - [ ] Acciones rápidas (botones):
+    - [ ] Registrar movimiento
+    - [ ] Nueva orden de compra
+    - [ ] Iniciar conteo
+    - [ ] Ver alertas
+
+#### Reportes de Inventario
+
+- [ ] Crear página `/inventario/reportes`
+- [ ] Componente `ReporteConsumo`
+  - [ ] Filtros: Rango de fechas, Categoría, Ingrediente
+  - [ ] Tabla con consumo detallado
+  - [ ] Gráfica de barras por ingrediente
+  - [ ] Comparativa con período anterior
+  - [ ] Exportar a Excel/PDF
+
+- [ ] Componente `ReporteValoracion`
+  - [ ] Valor total del inventario actual
+  - [ ] Valor por categoría
+  - [ ] Gráfica de pastel de distribución
+  - [ ] Evolución del valor (últimos meses)
+  - [ ] Exportar reporte
+
+- [ ] Componente `ReporteRotacion`
+  - [ ] Cálculo de rotación de inventario
+  - [ ] Ingredientes de alta/media/baja rotación
+  - [ ] Días promedio de inventario
+  - [ ] Ingredientes obsoletos (sin movimiento en X días)
+  - [ ] Recomendaciones de compra
+
+- [ ] Componente `ReporteMerma`
+  - [ ] Mermas registradas por período
+  - [ ] Merma por categoría
+  - [ ] Merma por ingrediente
+  - [ ] Valor de mermas
+  - [ ] Gráfica de tendencia
+  - [ ] Exportar reporte
+
+- [ ] Componente `ReporteCompras`
+  - [ ] Compras por proveedor
+  - [ ] Compras por categoría
+  - [ ] Comparativa de precios (si cambió el precio)
+  - [ ] Gasto total por período
+  - [ ] Frecuencia de compras
+  - [ ] Exportar reporte
+
+---
+
+### Integración con Pedidos
+
+- [ ] Modificar `pedidosService.ts`
+  - [ ] Al crear pedido: Verificar stock de receta
+  - [ ] Al confirmar pedido: Descontar ingredientes de receta
+  - [ ] Función `verificarDisponibilidadPedido(receta)`
+  - [ ] Función `descontarIngredientesPedido(pedidoId, receta)`
+  - [ ] Alertar si algún ingrediente está bajo/sin stock
+  - [ ] Registrar movimiento automático en `movimientos_inventario`
+
+- [ ] Modificar componente `FormPedido`
+  - [ ] Indicador visual si producto sin stock
+  - [ ] Badge "Stock bajo" en productos con ingredientes escasos
+  - [ ] Modal de confirmación si hay productos con stock bajo
+  - [ ] Sugerencias de productos alternativos (si aplica)
+
+---
+
+### Sistema de Alertas en Tiempo Real
+
+- [ ] Crear `alertasInventarioService.ts`
+  - [ ] Listener de cambios en `ingredientes` (onSnapshot)
+  - [ ] Detectar stock bajo (< stock mínimo)
+  - [ ] Detectar sin stock (= 0)
+  - [ ] Detectar próximo a vencer (< 7 días)
+  - [ ] Enviar notificación push a encargado/admin
+  - [ ] Crear alerta en colección `notificaciones`
+
+- [ ] Crear componente `NotificacionesInventario`
+  - [ ] Notificaciones específicas de inventario
+  - [ ] Botón "Ver Inventario"
+  - [ ] Botón "Crear Orden de Compra"
+  - [ ] Marcar como leída
+
+- [ ] Crear hook `useAlertasInventario`
+  - [ ] Obtener alertas activas
+  - [ ] Contador de alertas no leídas
+  - [ ] Función para marcar como vista
+
+---
+
+### Cálculos Automáticos
+
+- [ ] Crear `calculosInventarioService.ts`
+  - [ ] `calcularCostoReceta(receta)` - Costo total de una receta
+  - [ ] `calcularCostoRealPedido(pedido)` - Costo real basado en inventario
+  - [ ] `calcularConsumoPromedio(ingredienteId, dias)` - Consumo promedio
+  - [ ] `proyectarDiasStock(ingredienteId)` - Cuántos días queda de stock
+  - [ ] `calcularPuntoReorden(ingredienteId)` - Cuándo ordenar
+  - [ ] `calcularCantidadOptima(ingredienteId)` - Cuánto ordenar
+  - [ ] `calcularRotacionInventario(ingredienteId, periodo)` - Rotación
+  - [ ] `calcularValorInventario(categoria?)` - Valor total del inventario
+  - [ ] `calcularMerma(ingredienteId, periodo)` - Porcentaje de merma
+  - [ ] `calcularMargenReal(productoId)` - Margen con costos actuales
+
+---
+
+### Permisos y Seguridad
+
+#### Roles
+
+| Funcionalidad                  | Cajera | Cocina | Repartidor | Encargado | Admin |
+| ------------------------------ | ------ | ------ | ---------- | --------- | ----- |
+| Ver inventario                 | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Registrar movimientos          | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Gestionar ingredientes         | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Gestionar recetas              | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Ver alertas de stock           | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Crear órdenes de compra        | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Aprobar órdenes de compra      | ❌     | ❌     | ❌         | ❌        | ✅    |
+| Gestionar proveedores          | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Realizar conteo físico         | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Ver reportes                   | ❌     | ❌     | ❌         | ✅        | ✅    |
+| Configurar stock mín/máx       | ❌     | ❌     | ❌         | ✅        | ✅    |
+
+#### Reglas Firestore
+
+- [ ] Escribir reglas para `ingredientes`
+  - [ ] Lectura: Solo encargado y admin
+  - [ ] Escritura: Solo encargado y admin
+  - [ ] Validar estructura de documento
+
+- [ ] Escribir reglas para `recetas`
+  - [ ] Lectura: Solo encargado y admin
+  - [ ] Escritura: Solo encargado y admin
+
+- [ ] Escribir reglas para `movimientos_inventario`
+  - [ ] Lectura: Solo encargado y admin
+  - [ ] Escritura: Solo usuarios autenticados (con validación)
+  - [ ] Auditoria completa (no borrar, solo insertar)
+
+- [ ] Escribir reglas para `ordenes_compra`
+  - [ ] Lectura: Solo encargado y admin
+  - [ ] Crear: Encargado y admin
+  - [ ] Aprobar: Solo admin
+  - [ ] Modificar: Solo si estado es PENDIENTE
+
+- [ ] Escribir reglas para `proveedores`
+  - [ ] Lectura: Solo encargado y admin
+  - [ ] Escritura: Solo encargado y admin
+
+---
+
+### Migración de Datos Inicial
+
+- [ ] Crear script `seed-inventario.ts`
+  - [ ] Importar ingredientes desde Excel
+  - [ ] Mapear categorías
+  - [ ] Establecer stocks iniciales
+  - [ ] Importar recetas desde Excel
+  - [ ] Vincular recetas con productos del menú
+  - [ ] Importar subrecetas
+  - [ ] Crear proveedores base
+
+- [ ] Crear herramienta de importación masiva
+  - [ ] Leer archivo Excel de costeo
+  - [ ] Parsear hoja "Ingredientes"
+  - [ ] Parsear hojas de recetas (Burgers, Parrilla, etc.)
+  - [ ] Crear ingredientes en Firestore
+  - [ ] Crear recetas en Firestore
+  - [ ] Validar integridad de datos
+  - [ ] Generar reporte de importación
+
+---
+
+### Testing
+
+- [ ] Tests unitarios de servicios
+  - [ ] `ingredientesService.test.ts`
+  - [ ] `recetasService.test.ts`
+  - [ ] `movimientosService.test.ts`
+  - [ ] `calculosInventarioService.test.ts`
+
+- [ ] Tests de integración
+  - [ ] Flujo de crear pedido → descontar inventario
+  - [ ] Flujo de orden de compra → recibir → actualizar stock
+  - [ ] Flujo de conteo físico → ajustar inventario
+
+- [ ] Tests de cálculos
+  - [ ] Cálculo de costo de receta
+  - [ ] Proyección de stock
+  - [ ] Rotación de inventario
+  - [ ] Valor de inventario
+
+---
+
+### Documentación
+
+- [ ] Crear `docs/INVENTARIO.md`
+  - [ ] Explicación del sistema completo
+  - [ ] Flujos de trabajo
+  - [ ] Casos de uso
+  - [ ] Preguntas frecuentes
+
+- [ ] Crear manual de usuario
+  - [ ] Manual para encargado
+  - [ ] Manual de conteo físico
+  - [ ] Manual de órdenes de compra
+  - [ ] Manual de alertas
+
+- [ ] Documentar schema de Firestore
+  - [ ] Actualizar `FIRESTORE_SCHEMA.md`
+  - [ ] Diagramas de relaciones
+
+- [ ] Documentar APIs de servicios
+  - [ ] Actualizar `API_SERVICIOS.md`
+
+---
+
 ### Mejoras Futuras (Backlog)
 
 - [ ] Modo offline completo
@@ -889,12 +1621,17 @@
 - [ ] Integración con WhatsApp Business API
 - [ ] Integración con Uber Eats / Didi Food API
 - [ ] Sistema de fidelización de clientes
-- [ ] Módulo de inventario (Fase 2)
 - [ ] Módulo de nómina (Fase 2)
-- [ ] IA para predicción de demanda
+- [ ] IA para predicción de demanda basada en histórico
 - [ ] Optimización de rutas de reparto
 - [ ] Sistema de evaluación de repartidores
-- [ ] Multi-sucursal
+- [ ] Multi-sucursal con transferencias entre almacenes
+- [ ] Lector de código de barras para ingredientes
+- [ ] Integración con balanzas digitales
+- [ ] Alertas de fecha de vencimiento
+- [ ] Sistema de lotes y trazabilidad
+- [ ] Optimización de órdenes de compra (ML)
+- [ ] Análisis de desperdicio y merma con IA
 
 ---
 
