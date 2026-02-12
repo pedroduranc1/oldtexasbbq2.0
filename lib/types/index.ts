@@ -345,3 +345,11 @@ export interface FiltrosMovimientos {
   fechaFin?: Date;
   usuarioId?: string;
 }
+
+export interface FiltrosOrdenesCompra {
+  estado?: EstadoOrdenCompra;
+  proveedorId?: string;
+  fechaInicio?: Date;
+  fechaFin?: Date;
+  solicitadoPor?: string;
+}

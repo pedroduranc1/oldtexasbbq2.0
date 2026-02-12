@@ -17,6 +17,12 @@ export { turnosService } from './turnos.service';
 export { notificacionesService } from './notificaciones.service';
 export { configuracionService } from './configuracion.service';
 
+// Servicios de inventario
+export { ingredientesService } from './ingredientes.service';
+export { recetasService } from './recetas.service';
+export { movimientosService } from './movimientos.service';
+export { ordenesCompraService } from './ordenesCompra.service';
+
 // Re-exportar tipos de Firestore para conveniencia
 export type {
   Usuario,

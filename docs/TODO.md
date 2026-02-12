@@ -1109,30 +1109,30 @@ interface ConteoFisico {
   - [x] `getSubrecetas()` - Obtener subrecetas
   - [x] `importRecetasFromExcel(file)` - Importar desde Excel (placeholder)
 
-#### Movimientos de Inventario
+#### Movimientos de Inventario ✅
 
-- [ ] Crear `movimientosService.ts`
-  - [ ] `registrarEntrada(ingredienteId, cantidad, datos)` - Entrada (compra)
-  - [ ] `registrarSalida(ingredienteId, cantidad, datos)` - Salida (consumo)
-  - [ ] `registrarAjuste(ingredienteId, nuevoStock, motivo)` - Ajuste manual
-  - [ ] `registrarMerma(ingredienteId, cantidad, motivo)` - Merma
-  - [ ] `registrarVenta(pedidoId, receta)` - Descontar por venta
-  - [ ] `getMovimientos(filtros)` - Historial de movimientos
-  - [ ] `getMovimientosByIngrediente(ingredienteId, rango?)` - Movimientos de un ingrediente
-  - [ ] `getMovimientosByFecha(inicio, fin)` - Por rango de fechas
-  - [ ] `calcularConsumoPromedio(ingredienteId, dias)` - Consumo promedio
+- [x] Crear `movimientosService.ts`
+  - [x] `registrarEntrada(ingredienteId, cantidad, datos)` - Entrada (compra)
+  - [x] `registrarSalida(ingredienteId, cantidad, datos)` - Salida (consumo)
+  - [x] `registrarAjuste(ingredienteId, nuevoStock, motivo)` - Ajuste manual
+  - [x] `registrarMerma(ingredienteId, cantidad, motivo)` - Merma
+  - [x] `registrarVenta(pedidoId, receta)` - Descontar por venta
+  - [x] `getMovimientos(filtros)` - Historial de movimientos
+  - [x] `getMovimientosByIngrediente(ingredienteId, rango?)` - Movimientos de un ingrediente
+  - [x] `getMovimientosByFecha(inicio, fin)` - Por rango de fechas
+  - [x] `calcularConsumoPromedio(ingredienteId, dias)` - Consumo promedio
 
-#### Órdenes de Compra
+#### Órdenes de Compra ✅
 
-- [ ] Crear `ordenesCompraService.ts`
-  - [ ] `createOrdenCompra(orden)` - Crear orden
-  - [ ] `updateOrdenCompra(id, data)` - Actualizar orden
-  - [ ] `aprobarOrden(id, aprobadoPor)` - Aprobar orden
-  - [ ] `recibirOrden(id, cantidades, recibidoPor)` - Marcar como recibida
-  - [ ] `cancelarOrden(id, motivo)` - Cancelar orden
-  - [ ] `getOrdenes(filtros)` - Obtener órdenes
-  - [ ] `getOrdenById(id)` - Obtener por ID
-  - [ ] `generarOrdenSugerida()` - Generar orden automática (stock bajo)
+- [x] Crear `ordenesCompraService.ts`
+  - [x] `createOrdenCompra(orden)` - Crear orden
+  - [x] `updateOrdenCompra(id, data)` - Actualizar orden
+  - [x] `aprobarOrden(id, aprobadoPor)` - Aprobar orden
+  - [x] `recibirOrden(id, cantidades, recibidoPor)` - Marcar como recibida
+  - [x] `cancelarOrden(id, motivo)` - Cancelar orden
+  - [x] `getOrdenes(filtros)` - Obtener órdenes
+  - [x] `getOrdenById(id)` - Obtener por ID
+  - [x] `generarOrdenSugerida()` - Generar orden automática (stock bajo)
 
 #### Proveedores
 
