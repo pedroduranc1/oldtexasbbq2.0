@@ -91,6 +91,23 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
 
           console.log('[AuthStore] User data loaded:', userData ? 'Success' : 'No data');
 
+          // Crear sesión JWT ANTES de actualizar el estado para evitar condición de carrera:
+          // si se actualiza el estado primero, el redirect a /dashboard ocurre antes de
+          // que la cookie esté seteada y el middleware rechaza la navegación.
+          if (userData) {
+            const sessionCreated = await createServerSession(userData);
+            if (sessionCreated) {
+              console.log('[AuthStore] Server session created');
+            } else {
+              console.warn('[AuthStore] Failed to create server session');
+            }
+
+            // Actualizar última conexión en background (no bloquear)
+            usuariosService.updateUltimaConexion(firebaseUser.uid).catch((err) => {
+              console.error('[AuthStore] Error updating last connection:', err);
+            });
+          }
+
           set({
             user: firebaseUser,
             userData,
@@ -98,22 +115,6 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
             error: null,
             initialized: true
           });
-
-          // Crear sesión JWT en el servidor (para protección de API routes)
-          if (userData) {
-            createServerSession(userData).then((success) => {
-              if (success) {
-                console.log('[AuthStore] Server session created');
-              } else {
-                console.warn('[AuthStore] Failed to create server session');
-              }
-            });
-
-            // Actualizar última conexión en background (no bloquear)
-            usuariosService.updateUltimaConexion(firebaseUser.uid).catch((err) => {
-              console.error('[AuthStore] Error updating last connection:', err);
-            });
-          }
         } catch (e: any) {
           console.error('[AuthStore] Error loading user data:', e);
           set({
