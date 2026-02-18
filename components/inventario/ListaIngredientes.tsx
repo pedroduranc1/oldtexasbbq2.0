@@ -226,8 +226,11 @@ export function ListaIngredientes({ onNuevoIngrediente }: ListaIngredientesProps
 
   const handleSubmitForm = async (data: FormIngredienteData) => {
     try {
-      const proveedorData = data.proveedorId
-        ? { id: data.proveedorId, nombre: '', contacto: '' }
+      const proveedorId = data.proveedorId && data.proveedorId !== '__none__'
+        ? data.proveedorId
+        : undefined;
+      const proveedorData = proveedorId
+        ? { id: proveedorId, nombre: '', contacto: '' }
         : undefined;
 
       const payload = {

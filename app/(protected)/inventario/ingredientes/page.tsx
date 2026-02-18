@@ -21,8 +21,11 @@ export default function IngredientesPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleCrearIngrediente = async (data: FormIngredienteData) => {
-    const proveedorData = data.proveedorId
-      ? { id: data.proveedorId, nombre: '', contacto: '' }
+    const proveedorId = data.proveedorId && data.proveedorId !== '__none__'
+      ? data.proveedorId
+      : undefined;
+    const proveedorData = proveedorId
+      ? { id: proveedorId, nombre: '', contacto: '' }
       : undefined;
 
     await ingredientesService.createIngrediente({

@@ -345,14 +345,16 @@ export function FormIngrediente({
               </div>
             ) : (
               <Select
-                value={watch('proveedorId') ?? ''}
-                onValueChange={(val) => setValue('proveedorId', val)}
+                value={watch('proveedorId') || '__none__'}
+                onValueChange={(val) =>
+                  setValue('proveedorId', val === '__none__' ? '' : val)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sin proveedor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin proveedor</SelectItem>
+                  <SelectItem value="__none__">Sin proveedor</SelectItem>
                   {proveedores.map((prov) => (
                     <SelectItem key={prov.id} value={prov.id}>
                       {prov.nombre}
