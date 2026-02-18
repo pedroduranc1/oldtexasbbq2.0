@@ -1179,20 +1179,20 @@ interface ConteoFisico {
   - [x] Validaciones: Campos requeridos, stock >= 0, precios > 0
   - [x] Loading states
 
-- [ ] Componente `DetalleIngrediente`
-  - [ ] Modal con información completa
-  - [ ] Gráfica de movimientos recientes
-  - [ ] Historial de compras
-  - [ ] Consumo promedio
-  - [ ] Proyección de stock (cuántos días queda)
-  - [ ] Botón para registrar movimiento rápido
+- [x] Componente `DetalleIngrediente`
+  - [x] Modal con información completa
+  - [x] Gráfica de movimientos recientes
+  - [x] Historial de compras
+  - [x] Consumo promedio
+  - [x] Proyección de stock (cuántos días queda)
+  - [x] Botón para registrar movimiento rápido
 
-- [ ] Componente `AlertasInventario`
-  - [ ] Panel de alertas en dashboard
-  - [ ] Lista de ingredientes con stock bajo
-  - [ ] Lista de ingredientes sin stock
-  - [ ] Ingredientes próximos a vencer
-  - [ ] Botón "Generar Orden de Compra" automática
+- [x] Componente `AlertasInventario`
+  - [x] Panel de alertas en dashboard
+  - [x] Lista de ingredientes con stock bajo
+  - [x] Lista de ingredientes sin stock
+  - [x] Ingredientes próximos a vencer
+  - [x] Botón "Generar Orden de Compra" automática
 
 #### Gestión de Recetas
 

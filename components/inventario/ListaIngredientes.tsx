@@ -46,7 +46,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { FormIngrediente, FormIngredienteData } from './FormIngrediente';
+import { DetalleIngrediente } from './DetalleIngrediente';
 import {
+  Eye,
   Pencil,
   Trash2,
   ChevronUp,
@@ -87,6 +89,10 @@ export function ListaIngredientes({ onNuevoIngrediente }: ListaIngredientesProps
 
   // Paginación
   const [pagina, setPagina] = useState(1);
+
+  // Modal detalle
+  const [detalleOpen, setDetalleOpen] = useState(false);
+  const [ingredienteDetalle, setIngredienteDetalle] = useState<Ingrediente | null>(null);
 
   // Modal edición
   const [modalOpen, setModalOpen] = useState(false);
@@ -188,6 +194,11 @@ export function ListaIngredientes({ onNuevoIngrediente }: ListaIngredientesProps
     if (ing.stockActual === 0) return 'sin_stock';
     if (ing.stockActual < ing.stockMinimo) return 'bajo';
     return 'ok';
+  };
+
+  const handleVerDetalle = (ing: Ingrediente) => {
+    setIngredienteDetalle(ing);
+    setDetalleOpen(true);
   };
 
   const handleEditar = (ing: Ingrediente) => {
@@ -440,6 +451,15 @@ export function ListaIngredientes({ onNuevoIngrediente }: ListaIngredientesProps
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
+                          onClick={() => handleVerDetalle(ing)}
+                          title="Ver detalle"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={() => handleEditar(ing)}
                           title="Editar"
                         >
@@ -491,6 +511,22 @@ export function ListaIngredientes({ onNuevoIngrediente }: ListaIngredientesProps
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Modal detalle */}
+      {ingredienteDetalle && (
+        <DetalleIngrediente
+          open={detalleOpen}
+          ingrediente={ingredienteDetalle}
+          onClose={() => {
+            setDetalleOpen(false);
+            setIngredienteDetalle(null);
+          }}
+          onEdit={(ing) => {
+            setDetalleOpen(false);
+            handleEditar(ing);
+          }}
+        />
       )}
 
       {/* Modal formulario */}
