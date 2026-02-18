@@ -1136,23 +1136,23 @@ interface ConteoFisico {
 
 #### Proveedores
 
-- [ ] Crear `proveedoresService.ts`
-  - [ ] `createProveedor(proveedor)` - Crear proveedor
-  - [ ] `updateProveedor(id, data)` - Actualizar proveedor
-  - [ ] `deleteProveedor(id)` - Eliminar (soft delete)
-  - [ ] `getProveedores(filtros?)` - Obtener todos
-  - [ ] `getProveedorById(id)` - Obtener por ID
-  - [ ] `getProveedoresByCategoria(categoria)` - Por categoría
+- [x] Crear `proveedoresService.ts`
+  - [x] `createProveedor(proveedor)` - Crear proveedor
+  - [x] `updateProveedor(id, data)` - Actualizar proveedor
+  - [x] `deleteProveedor(id)` - Eliminar (soft delete)
+  - [x] `getProveedores(filtros?)` - Obtener todos
+  - [x] `getProveedorById(id)` - Obtener por ID
+  - [x] `getProveedoresByCategoria(categoria)` - Por categoría
 
 #### Conteo Físico
 
-- [ ] Crear `conteoFisicoService.ts`
-  - [ ] `iniciarConteo(tipo)` - Iniciar inventario físico
-  - [ ] `registrarConteo(conteoId, ingredienteId, stockFisico)` - Registrar conteo
-  - [ ] `finalizarConteo(conteoId)` - Finalizar conteo
-  - [ ] `aplicarAjustes(conteoId)` - Aplicar diferencias al stock
-  - [ ] `getConteos(filtros)` - Historial de conteos
-  - [ ] `getConteoById(id)` - Obtener conteo por ID
+- [x] Crear `conteoFisicoService.ts`
+  - [x] `iniciarConteo(tipo)` - Iniciar inventario físico
+  - [x] `registrarConteo(conteoId, ingredienteId, stockFisico)` - Registrar conteo
+  - [x] `finalizarConteo(conteoId)` - Finalizar conteo
+  - [x] `aplicarAjustes(conteoId)` - Aplicar diferencias al stock
+  - [x] `getConteos(filtros)` - Historial de conteos
+  - [x] `getConteoById(id)` - Obtener conteo por ID
 
 ---
 
@@ -1160,25 +1160,24 @@ interface ConteoFisico {
 
 #### Gestión de Ingredientes
 
-- [ ] Crear página `/inventario/ingredientes`
-- [ ] Componente `ListaIngredientes`
-  - [ ] Vista tabla con todos los ingredientes
-  - [ ] Columnas: Nombre, Categoría, Stock Actual, Stock Mínimo, Precio, Estado
-  - [ ] Filtros: Categoría, Stock (todos/bajo/sin stock), Búsqueda
-  - [ ] Ordenamiento: Nombre, Stock, Precio, Categoría
-  - [ ] Paginación
-  - [ ] Botones de acción: Ver, Editar, Eliminar
-  - [ ] Indicador visual de stock bajo (amarillo) y sin stock (rojo)
-  - [ ] Badge de alerta en ingredientes con stock bajo
+- [x] Crear página `/inventario/ingredientes`
+- [x] Componente `ListaIngredientes`
+  - [x] Vista tabla con todos los ingredientes
+  - [x] Columnas: Nombre, Categoría, Stock Actual, Stock Mínimo, Precio, Estado
+  - [x] Filtros: Categoría, Stock (todos/bajo/sin stock), Búsqueda
+  - [x] Ordenamiento: Nombre, Stock, Precio, Categoría
+  - [x] Paginación
+  - [x] Botones de acción: Editar, Eliminar
+  - [x] Indicador visual de stock bajo (amarillo) y sin stock (rojo)
+  - [x] Badge de alerta en ingredientes con stock bajo
 
-- [ ] Componente `FormIngrediente`
-  - [ ] Modal para crear/editar ingrediente
-  - [ ] Campos: Nombre, Categoría, Unidad, Precio, Stock Actual, Stock Min/Max
-  - [ ] Selector de proveedor
-  - [ ] Campo de ubicación (almacén, refrigerador, etc.)
-  - [ ] Validaciones: Campos requeridos, stock >= 0, precios > 0
-  - [ ] Preview de información
-  - [ ] Loading states
+- [x] Componente `FormIngrediente`
+  - [x] Modal para crear/editar ingrediente
+  - [x] Campos: Nombre, Categoría, Unidad, Precio, Stock Actual, Stock Min/Max
+  - [x] Selector de proveedor
+  - [x] Campo de ubicación (almacén, refrigerador, etc.)
+  - [x] Validaciones: Campos requeridos, stock >= 0, precios > 0
+  - [x] Loading states
 
 - [ ] Componente `DetalleIngrediente`
   - [ ] Modal con información completa

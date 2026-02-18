@@ -22,6 +22,10 @@ export { ingredientesService } from './ingredientes.service';
 export { recetasService } from './recetas.service';
 export { movimientosService } from './movimientos.service';
 export { ordenesCompraService } from './ordenesCompra.service';
+export { proveedoresService } from './proveedoresService';
+export { conteoFisicoService } from './conteoFisicoService';
+export type { FiltrosProveedores } from './proveedoresService';
+export type { FiltrosConteo } from './conteoFisicoService';
 
 // Re-exportar tipos de Firestore para conveniencia
 export type {
