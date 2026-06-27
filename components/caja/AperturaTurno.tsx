@@ -84,7 +84,7 @@ export function AperturaTurno() {
       {
         tipo: data.tipo,
         cajeroId: usuario.id,
-        cajeroNombre: `${usuario.nombre} ${usuario.apellido}`,
+        cajeroNombre: [usuario.nombre, usuario.apellido].filter(Boolean).join(' '),
         fondoInicial: data.fondoInicial,
       },
       {
