@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -194,7 +195,12 @@ export function ResumenCaja({ turno }: ResumenCajaProps) {
       {/* Últimos movimientos */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Últimos Movimientos</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm">Últimos Movimientos</CardTitle>
+            <Button variant="ghost" size="sm" asChild className="h-7 text-xs">
+              <Link href="/caja/movimientos">Ver todos</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loadingMovimientos ? (

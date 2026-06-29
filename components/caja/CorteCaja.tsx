@@ -116,7 +116,7 @@ export function CorteCaja() {
       resultado = resultado.filter(
         (t) =>
           t.cajeroNombre.toLowerCase().includes(busquedaLower) ||
-          t.encargadoNombre?.toLowerCase().includes(busquedaLower)
+          t.corte?.cerradoPorNombre?.toLowerCase().includes(busquedaLower)
       );
     }
 
@@ -205,7 +205,7 @@ export function CorteCaja() {
   // Descuadre por cajero (quién cierra)
   const descuadrePorCajero: Record<string, { turnos: number; faltante: number; sobrante: number }> = {};
   turnosFiltrados.forEach((t) => {
-    const nombre = t.encargadoNombre ?? t.cajeroNombre ?? 'Desconocido';
+    const nombre = t.corte?.cerradoPorNombre ?? t.cajeroNombre ?? 'Desconocido';
     if (!descuadrePorCajero[nombre]) descuadrePorCajero[nombre] = { turnos: 0, faltante: 0, sobrante: 0 };
     descuadrePorCajero[nombre].turnos++;
     const d = t.corte?.diferencia ?? 0;
@@ -399,8 +399,9 @@ export function CorteCaja() {
                 {turnosFiltrados.map((turno) => {
                   const diferencia = turno.corte?.diferencia ?? 0;
                   const esDescuadre = Math.abs(diferencia) >= 50;
-                  const turnoCruzado = turno.encargadoNombre &&
-                    turno.encargadoNombre.trim().toLowerCase() !== turno.cajeroNombre?.trim().toLowerCase();
+                  const cerradoPorNombre = turno.corte?.cerradoPorNombre;
+                  const turnoCruzado = !!cerradoPorNombre &&
+                    cerradoPorNombre.trim().toLowerCase() !== turno.cajeroNombre?.trim().toLowerCase();
 
                   return (
                   <TableRow
@@ -418,15 +419,15 @@ export function CorteCaja() {
                     </TableCell>
                     <TableCell className="text-sm">{turno.cajeroNombre}</TableCell>
                     <TableCell className="text-sm">
-                      {turno.encargadoNombre ? (
+                      {cerradoPorNombre ? (
                         <span className={turnoCruzado ? 'text-amber-600 font-medium' : ''}>
-                          {turno.encargadoNombre}
+                          {cerradoPorNombre}
                           {turnoCruzado && (
                             <AlertTriangle className="inline h-3 w-3 ml-1 text-amber-500" />
                           )}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground italic">Sin registrar</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">

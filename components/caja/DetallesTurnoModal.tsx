@@ -113,8 +113,16 @@ export function DetallesTurnoModal({ turno, open, onClose }: DetallesTurnoModalP
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Cajero</p>
+                <p className="text-sm text-muted-foreground">Abierto por</p>
                 <p className="font-medium">{turno.cajeroNombre}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Cerrado por</p>
+                <p className="font-medium">
+                  {turno.corte?.cerradoPorNombre ?? (
+                    <span className="text-muted-foreground italic">Sin registrar</span>
+                  )}
+                </p>
               </div>
               {turno.encargadoNombre && (
                 <div>

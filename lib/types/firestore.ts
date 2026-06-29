@@ -424,7 +424,10 @@ export interface CorteCaja {
   efectivoReal: number;
   diferencia: number;
   observaciones?: string;
+  /** UID del usuario que cerró el turno */
   cerradoPor: string;
+  /** Nombre completo de quien cerró, resuelto desde la sesión activa al momento del cierre */
+  cerradoPorNombre: string;
   horaCierre: Timestamp;
   /** Justificación del descuadre — requerida para |diferencia| >= $50 */
   justificacion?: string;
@@ -695,6 +698,11 @@ export type TipoMovimientoCaja = 'ingreso' | 'egreso';
 /**
  * Representa un movimiento de dinero dentro de un turno de caja.
  * Cada ingreso o egreso queda registrado con referencia al turno activo.
+ *
+ * MovimientosCaja es inmutable (audit trail) — un movimiento erróneo nunca
+ * se edita ni se borra. En su lugar se crea un movimiento de corrección:
+ * un nuevo registro de signo contrario que referencia al original mediante
+ * `correccionDe`, y el original queda marcado con `corregidoPor`.
  */
 export interface MovimientoCaja {
   id: string;
@@ -705,6 +713,10 @@ export interface MovimientoCaja {
   descripcion?: string;
   fecha: Timestamp;
   usuario_id: string;
+  /** ID del movimiento original que este registro corrige (anula) */
+  correccionDe?: string;
+  /** ID del movimiento de corrección que anula a este (se setea en el original) */
+  corregidoPor?: string;
 }
 
 export type NuevoMovimientoCaja = Omit<MovimientoCaja, 'id'>;
@@ -725,7 +737,8 @@ export interface CierreCaja {
   diferencia: number;      // monto_real - monto_esperado (negativo = faltante)
   notas?: string;
   fecha: Timestamp;
-  usuario_id: string;      // quien realizó el cierre
+  usuario_id: string;        // quien realizó el cierre
+  usuario_nombre: string;    // nombre completo, resuelto desde la sesión activa al cerrar
 }
 
 export type NuevoCierreCaja = Omit<CierreCaja, 'id'>;

@@ -80,7 +80,7 @@ export function CierreTurno({ turno }: CierreTurnoProps) {
 
   // Verificar si el cajero de apertura difiere del que cierra
   const usuarioActualNombre = usuario
-    ? `${usuario.nombre} ${usuario.apellido}`
+    ? [usuario.nombre, usuario.apellido].filter(Boolean).join(' ')
     : '';
   const turnoCruzado =
     !!usuario && !!turno.cajeroNombre &&
@@ -91,12 +91,21 @@ export function CierreTurno({ turno }: CierreTurnoProps) {
       toast.error('No hay sesión activa');
       return;
     }
+    if (!usuarioActualNombre) {
+      toast.error('No se pudo determinar tu nombre de usuario. Vuelve a iniciar sesión.');
+      return;
+    }
     if (notasObligatorias && !data.notas?.trim()) {
       toast.error('Debes agregar una nota para diferencias ≥ $50');
       return;
     }
     crearCierre(
-      { montoReal: data.montoReal, usuarioId: usuario.id, notas: data.notas },
+      {
+        montoReal: data.montoReal,
+        usuarioId: usuario.id,
+        usuarioNombre: usuarioActualNombre,
+        notas: data.notas,
+      },
       {
         onSuccess: () => {
           toast.success('Turno cerrado correctamente');

@@ -47,9 +47,11 @@ export async function crearCierre(
   turnoId: string,
   montoReal: number,
   usuarioId: string,
+  usuarioNombre: string,
   notas?: string
 ): Promise<string> {
   if (montoReal < 0) throw new Error('El monto real no puede ser negativo');
+  if (!usuarioNombre?.trim()) throw new Error('No se pudo determinar quién cierra el turno');
 
   const turno = await turnosService.getById(turnoId);
   if (!turno) throw new Error('Turno no encontrado');
@@ -72,6 +74,7 @@ export async function crearCierre(
     notas: notas ?? null,
     fecha: ahora,
     usuario_id: usuarioId,
+    usuario_nombre: usuarioNombre.trim(),
   });
 
   // Actualizar el turno como cerrado
@@ -84,6 +87,7 @@ export async function crearCierre(
       diferencia,
       observaciones: notas ?? '',
       cerradoPor: usuarioId,
+      cerradoPorNombre: usuarioNombre.trim(),
       horaCierre: ahora,
     },
   });

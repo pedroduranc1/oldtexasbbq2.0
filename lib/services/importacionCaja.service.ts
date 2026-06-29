@@ -122,7 +122,8 @@ export async function importarFilasCSV(
           efectivoReal: montoReal,
           diferencia: diferenciaCsv,
           observaciones: `Importado desde CSV. Cerrado por: ${fila.cerradoPor || 'N/A'}`,
-          cerradoPor: fila.cerradoPor || importadoPor,
+          cerradoPor: importadoPor,
+          cerradoPorNombre: fila.cerradoPor || 'Importado (sin registrar)',
           horaCierre: Timestamp.fromDate(horaFinDate),
         },
         importadoDesdeCsv: true,
@@ -140,6 +141,7 @@ export async function importarFilasCSV(
         notas: `Importado desde CSV. Cerrado por: ${fila.cerradoPor || 'N/A'}`,
         fecha: Timestamp.fromDate(horaFinDate),
         usuario_id: importadoPor,
+        usuario_nombre: fila.cerradoPor || 'Importado (sin registrar)',
         importadoDesdeCsv: true,
       });
 

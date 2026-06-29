@@ -26,6 +26,9 @@ import { toast } from 'sonner';
 const FALLBACK_INGRESOS = ['Venta mostrador', 'Venta delivery', 'Anticipo cliente', 'Otro ingreso'];
 const FALLBACK_EGRESOS = ['Compra insumos', 'Pago proveedor', 'Nómina', 'Otro egreso'];
 
+/** Conceptos "escape valve" del catálogo — exigen detalle obligatorio en descripción */
+const CONCEPTOS_OTRO = new Set(['Otro ingreso', 'Otro egreso']);
+
 interface FormValues {
   tipo: TipoMovimientoCaja;
   monto: number;
@@ -54,6 +57,8 @@ export function RegistroMovimiento({ turnoId }: RegistroMovimientoProps) {
   });
 
   const tipoActual = watch('tipo');
+  const conceptoActual = watch('concepto');
+  const esConceptoOtro = CONCEPTOS_OTRO.has(conceptoActual);
 
   // Conceptos dinámicos desde Firestore
   const { data: conceptosDinamicos = [] } = useConceptosPorTipo(tipoActual);
@@ -69,6 +74,10 @@ export function RegistroMovimiento({ turnoId }: RegistroMovimientoProps) {
   const onSubmit = (data: FormValues) => {
     if (!usuario) {
       toast.error('No hay sesión activa');
+      return;
+    }
+    if (esConceptoOtro && !data.descripcion?.trim()) {
+      toast.error('Especifica el detalle del concepto en la descripción');
       return;
     }
     registrar(
@@ -155,12 +164,13 @@ export function RegistroMovimiento({ turnoId }: RegistroMovimientoProps) {
             )}
           </div>
 
-          {/* Concepto */}
+          {/* Concepto — siempre del catálogo, sin texto libre irrestricto */}
           <div className="space-y-1">
             <Label htmlFor="concepto">Concepto</Label>
+            <input type="hidden" {...register('concepto', { required: 'Selecciona un concepto' })} />
             <Select
-              onValueChange={(v) => setValue('concepto', v)}
-              value={watch('concepto')}
+              onValueChange={(v) => setValue('concepto', v, { shouldValidate: true })}
+              value={conceptoActual}
             >
               <SelectTrigger id="concepto">
                 <SelectValue placeholder="Selecciona un concepto" />
@@ -173,29 +183,37 @@ export function RegistroMovimiento({ turnoId }: RegistroMovimientoProps) {
                 ))}
               </SelectContent>
             </Select>
-            {/* Permitir concepto libre si no está en la lista */}
-            <Input
-              placeholder="O escribe un concepto personalizado…"
-              {...register('concepto', { required: 'El concepto es requerido' })}
-              className="mt-1"
-            />
             {errors.concepto && (
               <p className="text-sm text-destructive">{errors.concepto.message}</p>
             )}
           </div>
 
-          {/* Descripción (opcional) */}
+          {/* Descripción — obligatoria si el concepto es "Otro ingreso/egreso" */}
           <div className="space-y-1">
             <Label htmlFor="descripcion">
               Descripción{' '}
-              <span className="text-muted-foreground font-normal">(opcional)</span>
+              {esConceptoOtro ? (
+                <span className="text-destructive font-normal">(obligatorio)</span>
+              ) : (
+                <span className="text-muted-foreground font-normal">(opcional)</span>
+              )}
             </Label>
             <Textarea
               id="descripcion"
               rows={2}
-              placeholder="Detalles adicionales…"
-              {...register('descripcion')}
+              placeholder={
+                esConceptoOtro
+                  ? 'Especifica de qué se trata este concepto…'
+                  : 'Detalles adicionales…'
+              }
+              {...register('descripcion', {
+                validate: (v) =>
+                  !esConceptoOtro || !!v?.trim() || 'Especifica el detalle de este concepto',
+              })}
             />
+            {errors.descripcion && (
+              <p className="text-sm text-destructive">{errors.descripcion.message}</p>
+            )}
           </div>
 
           <Button

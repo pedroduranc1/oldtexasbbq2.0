@@ -43,8 +43,8 @@
 
 ### Rutas
 - [x] `app/(protected)/caja/page.tsx` — estado condicional: sin turno → AperturaTurno | con turno → layout 3 columnas
-- [ ] `app/(protected)/caja/movimientos/page.tsx`
-- [ ] `app/(protected)/caja/cierre/page.tsx`
+- [x] `app/(protected)/caja/movimientos/page.tsx` — tabla completa con filtros (tipo/concepto), totales del filtro, export CSV, acciones de corrección
+- [x] `app/(protected)/caja/cierre/page.tsx` — flujo de cierre a pantalla completa (mismo motor que el dialog de CierreTurno)
 
 ### Gaps detectados en auditoría (pendientes antes de Go-Live)
 
@@ -52,19 +52,19 @@
 - [x] `AperturaTurno.tsx` — validar que solo cajera/encargado/admin puede abrir turno (`useRolGuard`)
 - [x] `RegistroMovimiento.tsx` — validar que solo cajera/encargado/admin puede registrar movimientos
 - [x] `CierreTurno.tsx` — validar que solo encargado/admin puede cerrar turno
-- [ ] Crear vista de solo lectura para roles que solo deben consultar (encargado supervisando)
+- [x] Crear vista de solo lectura para roles que solo deben consultar (encargado supervisando) — `caja/page.tsx` calcula `esSupervisionAjena` (admin/encargado viendo un turno que no abrieron ellos): oculta `RegistroMovimiento`/`CierreTurno`, muestra banner azul "Modo consulta" + `ResumenCaja` de solo lectura. `caja/cierre/page.tsx` bloquea el acceso completo con el mismo mensaje. Excepción: correos en `configuracion/general.caja.accesoTotalEmails` (`useAccesoTotalCaja()`) siempre pueden operar cualquier turno — lista vacía por ahora, pendiente que el cliente proporcione los correos
 
 #### ✅ Gap 2 — Catálogo de conceptos centralizado (importante para Reportes)
 - [x] Colección `ConceptosFinancieros` en Firestore (id, nombre, tipo: ingreso|egreso, activo, orden) — reglas en `firestore.rules`
 - [x] Servicio `conceptosFinancieros.service.ts` — CRUD + `seedConceptos()`
 - [x] Hook `useConceptosFinancieros.ts` — React Query, carga dinámica
 - [x] `RegistroMovimiento.tsx` — conceptos desde Firestore con fallback estático
-- [ ] Validar que el concepto registrado existe en el catálogo (no texto libre irrestricto)
+- [x] Validar que el concepto registrado existe en el catálogo (no texto libre irrestricto) — se quitó el `<Input>` de texto libre que pisaba el campo `concepto`; ahora el valor solo puede venir del `<Select>` (registrado vía `<input type="hidden">` + RHF). Conceptos "Otro ingreso"/"Otro egreso" actúan como válvula de escape controlada: al elegirlos, el campo Descripción se vuelve obligatorio para capturar el detalle, sin inventar conceptos nuevos fuera del catálogo
 
 #### ✅ Gap 3 — Inmutabilidad de movimientos (integridad de datos)
 - [x] Reglas Firestore: bloquear `UPDATE` y `DELETE` en colección `MovimientosCaja`
 - [x] Reglas Firestore: bloquear `UPDATE` y `DELETE` en colección `CierresCaja`
-- [ ] Si hay error en un movimiento, crear "movimiento de corrección" (nuevo registro inverso)
+- [x] Si hay error en un movimiento, crear "movimiento de corrección" (nuevo registro inverso) — `corregirMovimiento()` en `movimientosCaja.service.ts` usa `runTransaction`: crea el movimiento inverso y marca el original con `corregidoPor` (regla Firestore permite únicamente ese campo en `update`). UI en `/caja/movimientos` con dialog de motivo obligatorio, restringido a admin/encargado.
 
 ### Mejoras derivadas del análisis de datos reales (CSV mayo–junio 2026)
 
@@ -95,10 +95,10 @@
 - [x] `caja/page.tsx` — banner amber si turno lleva >10h abierto
 
 #### Historial — mejoras para el encargado
-- [ ] `CorteCaja.tsx` — columna "Abierto por" y "Cerrado por" separadas
-- [ ] `CorteCaja.tsx` — resaltado visual automático para descuadres `>= $50`
-- [ ] `CorteCaja.tsx` — tarjeta de resumen del periodo: pérdida neta, tasa de descuadre por cajero, total faltantes/sobrantes
-- [ ] PDF de corte — incluir ambos cajeros cuando apertura ≠ cierre
+- [x] `CorteCaja.tsx` — columna "Abierto por" y "Cerrado por" separadas. Fix: "Cerrado por" leía `turno.encargadoNombre` (campo opcional y casi siempre vacío, pensado para un supervisor distinto) en vez de quién realmente cerró el turno. Ahora `corte.cerradoPorNombre` se resuelve y persiste desde la sesión activa al momento del cierre (`crearCierre()` lo exige como parámetro obligatorio) y es lo que se muestra en la tabla, en `DetallesTurnoModal` y en el PDF
+- [x] `CorteCaja.tsx` — resaltado visual automático para descuadres `>= $50`
+- [x] `CorteCaja.tsx` — tarjeta de resumen del periodo: pérdida neta, tasa de descuadre por cajero, total faltantes/sobrantes
+- [x] PDF de corte — incluye "Abierto por" y "Cerrado por" por separado; "Encargado" se mantiene como dato adicional opcional
 
 ### Implementación de gaps y mejoras (orden de ejecución)
 
@@ -123,14 +123,14 @@
 - [x] `AperturaTurno.tsx` — guard: `cajera`, `encargado`, `admin`
 - [x] `RegistroMovimiento.tsx` — guard: `cajera`, `encargado`, `admin`
 - [x] `CierreTurno.tsx` — guard: `cajera`, `encargado`, `admin`
-- [ ] `caja/page.tsx` — vista de solo lectura para roles sin permiso de escritura
+- [x] `caja/page.tsx` — vista de solo lectura para roles sin permiso de escritura (ver Gap 1 arriba)
 
 #### ✅ Paso 4 — Catálogo de conceptos centralizado
 - [x] Colección `ConceptosFinancieros` en Firestore — reglas en `firestore.rules`
 - [x] `lib/services/conceptosFinancieros.service.ts` — CRUD + `seedConceptos()`
 - [x] `lib/hooks/useConceptosFinancieros.ts` — React Query, carga dinámica
 - [x] `RegistroMovimiento.tsx` — conceptos desde Firestore con fallback estático
-- [ ] `RegistroMovimiento.tsx` — opción "Otro" con campo libre como excepción controlada
+- [x] `RegistroMovimiento.tsx` — opción "Otro" con campo libre como excepción controlada (descripción obligatoria cuando concepto ∈ {"Otro ingreso", "Otro egreso"})
 
 #### ✅ Paso 5 — Importación de CSV histórico
 - [x] `lib/utils/parseCajaCSV.ts` — parser Loyverse, maneja encoding Latin-1, separa flexible
@@ -143,26 +143,28 @@
 - [x] `CorteCaja.tsx` — resaltado visual automático para `|descuadre| >= $50` (fila con fondo rojo tenue)
 - [x] `CorteCaja.tsx` — tarjeta resumen del periodo: ventas totales, pérdida/ganancia neta, tasa de descuadre
 - [x] `CorteCaja.tsx` — mini-tarjetas de descuadre por cajero (faltantes / sobrantes)
-- [ ] PDF de corte — incluir ambos cajeros cuando apertura ≠ cierre
+- [x] PDF de corte — incluir ambos cajeros cuando apertura ≠ cierre — `pdf-export.ts` ya mostraba "Abierto por"/"Cerrado por" separados; se agregó el resaltado en ámbar con "⚠ Turno cruzado" junto al nombre cuando `cerradoPorNombre !== cajeroNombre`, igual que en pantalla
 
 ### Testing
-- [ ] Flujo completo: Apertura → Ingresos/Egresos → Cierre
-- [ ] Validar que solo un turno esté activo a la vez
-- [ ] Verificar cálculo de diferencias y totales
-- [ ] Subir CSV de prueba y verificar deduplicación
-- [ ] Validar alertas de descuadre en los 3 niveles
-- [ ] Verificar bloqueo de roles no autorizados
+> Pendiente de ejecución manual en vivo — el código que soporta cada punto ya existe (ver referencia), pero no se ha corrido el flujo real con datos de producción/staging.
+- [ ] Flujo completo: Apertura → Ingresos/Egresos → Cierre — código listo: `AperturaTurno`, `RegistroMovimiento`, `CierreTurno`
+- [ ] Validar que solo un turno esté activo a la vez — código listo: `abrirTurno()` lanza error si `getTurnoActivo()` ya existe
+- [ ] Verificar cálculo de diferencias y totales — código listo: `getTotalesPorTurno()`, `previsualizarCierre()`
+- [ ] Subir CSV de prueba y verificar deduplicación — código listo: `importarFilasCSV()` omite si `turnoId` ya existe
+- [ ] Validar alertas de descuadre en los 3 niveles — código listo: `nivelAlerta()` en `CierreTurno.tsx` / `/caja/cierre`
+- [ ] Verificar bloqueo de roles no autorizados — código listo: `useRolGuard()` en los 3 componentes de escritura
 
 ### ✅ Criterios de aceptación (Definition of Done)
-- [ ] Un turno se abre con saldo inicial y queda registrado como "abierto"
-- [ ] Cada ingreso/egreso se asocia al turno activo y actualiza el saldo en vivo
-- [ ] El cierre calcula automáticamente esperado vs real y reporta la diferencia
-- [ ] El sistema impide abrir un segundo turno mientras haya uno activo
-- [ ] Solo roles autorizados pueden abrir, registrar y cerrar turno
-- [ ] Los conceptos provienen del catálogo centralizado en Firestore
-- [ ] Ningún movimiento puede editarse o eliminarse una vez registrado
-- [ ] CSV histórico se importa sin duplicados y con reporte de resultado
-- [ ] Alertas de descuadre se disparan en los umbrales correctos ($50 / $200)
+> Mismo estado: implementados en código, pendientes de confirmación end-to-end.
+- [ ] Un turno se abre con saldo inicial y queda registrado como "abierto" — `turnos.service.ts: abrirTurno()`
+- [ ] Cada ingreso/egreso se asocia al turno activo y actualiza el saldo en vivo — `movimientosCaja.service.ts` + `useTotalesTurno` (React Query)
+- [ ] El cierre calcula automáticamente esperado vs real y reporta la diferencia — `cierreCaja.service.ts: crearCierre()`
+- [ ] El sistema impide abrir un segundo turno mientras haya uno activo — `abrirTurno()` valida `getTurnoActivo()`
+- [ ] Solo roles autorizados pueden abrir, registrar y cerrar turno — `useRolGuard(['admin','encargado','cajera'])`
+- [ ] Los conceptos provienen del catálogo centralizado en Firestore — Gap 2 resuelto: Select-only, sin texto libre irrestricto
+- [ ] Ningún movimiento puede editarse o eliminarse una vez registrado — `firestore.rules`: `update`/`delete` bloqueados en `MovimientosCaja`/`CierresCaja`
+- [ ] CSV histórico se importa sin duplicados y con reporte de resultado — `importarFilasCSV()` retorna `{ importados, omitidos, errores }`
+- [ ] Alertas de descuadre se disparan en los umbrales correctos ($50 / $200) — `nivelAlerta()`: info/warning/critical
 
 ---
 
