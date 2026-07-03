@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -55,16 +54,8 @@ export function MetodoPagoSelector({
   montoPagado,
   onMontoPagadoChange,
 }: MetodoPagoSelectorProps) {
-  const [montoInput, setMontoInput] = useState(montoPagado.toString());
-
   const cambio = montoPagado > total ? montoPagado - total : 0;
   const requiresCambio = metodoPago === 'efectivo';
-
-  const handleMontoChange = (value: string) => {
-    setMontoInput(value);
-    const monto = parseFloat(value) || 0;
-    onMontoPagadoChange(monto);
-  };
 
   return (
     <div className="space-y-6">
@@ -144,14 +135,10 @@ export function MetodoPagoSelector({
                 <Label htmlFor="montoPagado" className="text-sm">
                   Con Cuánto Paga
                 </Label>
-                <Input
+                <CurrencyInput
                   id="montoPagado"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={montoInput}
-                  onChange={(e) => handleMontoChange(e.target.value)}
-                  placeholder="0.00"
+                  value={montoPagado}
+                  onValueChange={onMontoPagadoChange}
                   className="text-lg font-semibold"
                 />
               </div>

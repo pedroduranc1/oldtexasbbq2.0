@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import { X, Download, Clock, User, DollarSign, TrendingUp } from 'lucide-react';
 import { Turno, TransaccionTurno } from '@/lib/types/firestore';
 import { turnosService } from '@/lib/services/turnos.service';
+import { TIPOS_TURNO } from '@/lib/utils/constants';
 import {
   Dialog,
   DialogContent,
@@ -109,12 +110,20 @@ export function DetallesTurnoModal({ turno, open, onClose }: DetallesTurnoModalP
               <div>
                 <p className="text-sm text-muted-foreground">Tipo de Turno</p>
                 <Badge variant={turno.tipo === 'matutino' ? 'default' : 'secondary'}>
-                  {turno.tipo === 'matutino' ? '🌅 Matutino' : '🌆 Vespertino'}
+                  {TIPOS_TURNO[turno.tipo].icon} {TIPOS_TURNO[turno.tipo].label}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Cajero</p>
+                <p className="text-sm text-muted-foreground">Abierto por</p>
                 <p className="font-medium">{turno.cajeroNombre}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Cerrado por</p>
+                <p className="font-medium">
+                  {turno.corte?.cerradoPorNombre ?? (
+                    <span className="text-muted-foreground italic">Sin registrar</span>
+                  )}
+                </p>
               </div>
               {turno.encargadoNombre && (
                 <div>

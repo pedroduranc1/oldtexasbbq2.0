@@ -118,6 +118,9 @@ async function seedConfiguracion() {
       umbralDescuadreWarning: 50,
       umbralDescuadreCritico: 200,
       turnoHorasMaximas: 10,
+      // Correos con acceso total a Caja — pueden operar cualquier turno
+      // sin restricción de solo-lectura, sin importar quién lo abrió.
+      accesoTotalEmails: [],
     },
     delivery: {
       costoEnvioDefault: 50,

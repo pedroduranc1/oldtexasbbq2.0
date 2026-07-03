@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -102,7 +103,7 @@ export function DetalleIngrediente({
   const [cantidad, setCantidad] = useState('');
   const [nuevoStock, setNuevoStock] = useState('');
   const [motivo, setMotivo] = useState('');
-  const [costoUnitario, setCostoUnitario] = useState('');
+  const [costoUnitario, setCostoUnitario] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -168,7 +169,7 @@ export function DetalleIngrediente({
     setCantidad('');
     setNuevoStock('');
     setMotivo('');
-    setCostoUnitario('');
+    setCostoUnitario(0);
     setTipoMov('ENTRADA');
   };
 
@@ -201,7 +202,7 @@ export function DetalleIngrediente({
         if (tipoMov === 'ENTRADA') {
           await movimientosService.registrarEntrada(ingrediente.id, cant, {
             ...datosBase,
-            costoUnitario: costoUnitario ? parseFloat(costoUnitario) : undefined,
+            costoUnitario: costoUnitario > 0 ? costoUnitario : undefined,
           });
         } else if (tipoMov === 'SALIDA') {
           await movimientosService.registrarSalida(ingrediente.id, cant, datosBase);
@@ -446,14 +447,10 @@ export function DetalleIngrediente({
                 {tipoMov === 'ENTRADA' && (
                   <div className="space-y-1">
                     <Label className="text-xs">Costo unitario (opcional)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="$0.00"
+                    <CurrencyInput
                       className="h-8 text-xs"
                       value={costoUnitario}
-                      onChange={(e) => setCostoUnitario(e.target.value)}
+                      onValueChange={setCostoUnitario}
                     />
                   </div>
                 )}

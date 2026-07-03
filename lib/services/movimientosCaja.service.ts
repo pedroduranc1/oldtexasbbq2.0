@@ -10,9 +10,11 @@ import {
   collection,
   addDoc,
   getDocs,
+  doc,
   query,
   where,
   orderBy,
+  runTransaction,
   Timestamp,
   onSnapshot,
   Unsubscribe,
@@ -47,6 +49,55 @@ export async function registrarMovimiento(data: NuevoMovimientoCaja): Promise<st
     usuario_id: data.usuario_id,
   });
   return ref.id;
+}
+
+/**
+ * Corrige un movimiento existente creando un movimiento inverso (mismo monto,
+ * tipo contrario) y marcando el original como corregido.
+ *
+ * MovimientosCaja es inmutable — nunca se edita ni se borra un registro.
+ * Esto preserva el audit trail completo: el movimiento erróneo sigue visible,
+ * junto con el registro que lo anula y quién/cuándo lo corrigió.
+ *
+ * Operación atómica: si la corrección falla, no se crea el movimiento inverso.
+ */
+export async function corregirMovimiento(
+  movimientoId: string,
+  usuarioId: string,
+  motivo: string
+): Promise<string> {
+  if (!motivo.trim()) throw new Error('El motivo de la corrección es requerido');
+
+  const movRef = doc(db, COL, movimientoId);
+  const nuevoRef = doc(collection(db, COL));
+
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(movRef);
+    if (!snap.exists()) throw new Error('El movimiento original no existe');
+
+    const original = snap.data() as Omit<MovimientoCaja, 'id'>;
+    if (original.corregidoPor) {
+      throw new Error('Este movimiento ya fue corregido anteriormente');
+    }
+
+    const tipoInverso: TipoMovimientoCaja =
+      original.tipo === 'ingreso' ? 'egreso' : 'ingreso';
+
+    tx.set(nuevoRef, {
+      turno_id: original.turno_id,
+      tipo: tipoInverso,
+      monto: original.monto,
+      concepto: `Corrección: ${original.concepto}`,
+      descripcion: `Anula movimiento ${movimientoId}. Motivo: ${motivo.trim()}`,
+      fecha: Timestamp.now(),
+      usuario_id: usuarioId,
+      correccionDe: movimientoId,
+    });
+
+    tx.update(movRef, { corregidoPor: nuevoRef.id });
+  });
+
+  return nuevoRef.id;
 }
 
 // ============================================================================

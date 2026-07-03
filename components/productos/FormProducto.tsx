@@ -11,10 +11,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Producto, Categoria } from '@/lib/types/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -66,6 +67,7 @@ export function FormProducto({
   const {
     register,
     handleSubmit,
+    control,
     watch,
     setValue,
     formState: { errors, isSubmitting },
@@ -298,19 +300,24 @@ export function FormProducto({
           <Label htmlFor="precio">
             Precio (MXN) <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="precio"
-            type="number"
-            step="0.01"
-            min="0"
-            {...register('precio', {
+          <Controller
+            name="precio"
+            control={control}
+            rules={{
               required: 'El precio es requerido',
-              valueAsNumber: true,
               validate: (value) =>
                 validatePositiveNumber(value) || 'El precio debe ser mayor a 0',
-            })}
-            placeholder="0.00"
-            disabled={isFormLoading}
+            }}
+            render={({ field }) => (
+              <CurrencyInput
+                id="precio"
+                ref={field.ref}
+                value={field.value}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                disabled={isFormLoading}
+              />
+            )}
           />
           {errors.precio && (
             <p className="text-sm text-destructive">{errors.precio.message}</p>
@@ -381,14 +388,10 @@ export function FormProducto({
             <Label htmlFor="precioPromocion">
               Precio de promoción (MXN)
             </Label>
-            <Input
-              id="precioPromocion"
-              type="number"
-              step="0.01"
-              min="0"
-              max={precio}
-              {...register('precioPromocion', {
-                valueAsNumber: true,
+            <Controller
+              name="precioPromocion"
+              control={control}
+              rules={{
                 validate: (value) => {
                   if (!value) return true;
                   if (!validatePositiveNumber(value)) {
@@ -399,9 +402,17 @@ export function FormProducto({
                   }
                   return true;
                 },
-              })}
-              placeholder="0.00"
-              disabled={isFormLoading}
+              }}
+              render={({ field }) => (
+                <CurrencyInput
+                  id="precioPromocion"
+                  ref={field.ref}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                  disabled={isFormLoading}
+                />
+              )}
             />
             {errors.precioPromocion && (
               <p className="text-sm text-destructive">

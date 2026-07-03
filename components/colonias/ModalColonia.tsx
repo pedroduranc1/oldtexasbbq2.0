@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -41,7 +42,7 @@ export function ModalColonia({ open, colonia, onClose }: ModalColoniaProps) {
   // Estados del formulario
   const [nombre, setNombre] = useState('');
   const [zona, setZona] = useState('');
-  const [costoEnvio, setCostoEnvio] = useState('');
+  const [costoEnvio, setCostoEnvio] = useState(0);
   const [activa, setActiva] = useState(true);
 
   // Cargar datos si es edición
@@ -49,13 +50,13 @@ export function ModalColonia({ open, colonia, onClose }: ModalColoniaProps) {
     if (colonia) {
       setNombre(colonia.nombre);
       setZona(colonia.zona || '');
-      setCostoEnvio(colonia.costoEnvio.toString());
+      setCostoEnvio(colonia.costoEnvio);
       setActiva(colonia.activa);
     } else {
       // Limpiar formulario si es nuevo
       setNombre('');
       setZona('');
-      setCostoEnvio('');
+      setCostoEnvio(0);
       setActiva(true);
     }
   }, [colonia, open]);
@@ -68,7 +69,7 @@ export function ModalColonia({ open, colonia, onClose }: ModalColoniaProps) {
       return;
     }
 
-    const costoNumerico = parseFloat(costoEnvio);
+    const costoNumerico = costoEnvio;
     if (isNaN(costoNumerico) || costoNumerico < 0) {
       toast.error('El costo de envío debe ser un número válido');
       return;
@@ -181,14 +182,10 @@ export function ModalColonia({ open, colonia, onClose }: ModalColoniaProps) {
               <Label htmlFor="costoEnvio">
                 Costo de Envío ($) <span className="text-red-500">*</span>
               </Label>
-              <Input
+              <CurrencyInput
                 id="costoEnvio"
-                type="number"
-                min="0"
-                step="0.01"
                 value={costoEnvio}
-                onChange={(e) => setCostoEnvio(e.target.value)}
-                placeholder="0.00"
+                onValueChange={setCostoEnvio}
                 required
               />
               <p className="text-xs text-muted-foreground">

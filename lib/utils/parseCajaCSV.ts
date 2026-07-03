@@ -101,6 +101,10 @@ function extraerFecha(s: string): string {
  * @returns        Array de filas parseadas
  */
 export function parseCajaCSV(csvText: string): FilaCajaCSV[] {
+  // Diagnóstico solo en desarrollo — evita exponer datos (montos, nombres de
+  // cajeros) en la consola del navegador cuando se importa en producción.
+  const DEBUG = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+
   const fixed = fixEncoding(csvText);
   const lines = fixed.split(/\r?\n/).filter((l) => l.trim());
 
@@ -120,8 +124,8 @@ export function parseCajaCSV(csvText: string): FilaCajaCSV[] {
       .replace(/[\u0300-\u036f]/g, '') // quitar diacríticos para comparación
   );
 
-  // Log de diagnóstico (visible en consola del navegador)
-  if (typeof window !== 'undefined') {
+  // Log de diagnóstico — solo en desarrollo
+  if (DEBUG) {
     console.log('[parseCajaCSV] Separador detectado:', JSON.stringify(sep));
     console.log('[parseCajaCSV] Encabezados:', headers);
     console.log('[parseCajaCSV] Primera fila de datos:', lines[1]);
@@ -159,7 +163,7 @@ export function parseCajaCSV(csvText: string): FilaCajaCSV[] {
     ),
   };
 
-  if (typeof window !== 'undefined') {
+  if (DEBUG) {
     console.log('[parseCajaCSV] Índices de columnas:', idx);
   }
 
@@ -168,7 +172,7 @@ export function parseCajaCSV(csvText: string): FilaCajaCSV[] {
     // Buscar cualquier columna que contenga una fecha en la primera fila de datos
     const dataCols = parseLine(lines[1], sep).map((v) => v.replace(/^["']|["']$/g, '').trim());
     idx.apertura = dataCols.findIndex((v) => extraerFecha(v) !== '');
-    if (typeof window !== 'undefined') {
+    if (DEBUG) {
       console.log('[parseCajaCSV] Columna apertura auto-detectada por datos:', idx.apertura, dataCols);
     }
   }

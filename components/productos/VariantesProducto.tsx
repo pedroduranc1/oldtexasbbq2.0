@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -244,13 +245,10 @@ function VarianteModal({
           {/* Precio */}
           <div className="space-y-2">
             <Label htmlFor="precio">Precio de esta variante</Label>
-            <Input
+            <CurrencyInput
               id="precio"
-              type="number"
-              min="0"
-              step="0.01"
               value={precio}
-              onChange={(e) => setPrecio(parseFloat(e.target.value) || 0)}
+              onValueChange={setPrecio}
             />
             {precio !== precioBase && (
               <p className={`text-sm ${precio > precioBase ? 'text-green-600' : 'text-red-600'}`}>

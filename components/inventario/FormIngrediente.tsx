@@ -9,10 +9,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Ingrediente, CategoriaIngrediente, UnidadMedida, ProveedorCompleto } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -65,6 +66,7 @@ export function FormIngrediente({
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     reset,
@@ -230,17 +232,22 @@ export function FormIngrediente({
             <Label htmlFor="precioPorUnidad">
               Precio por Unidad ($) <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="precioPorUnidad"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              {...register('precioPorUnidad', {
+            <Controller
+              name="precioPorUnidad"
+              control={control}
+              rules={{
                 required: 'El precio es requerido',
                 min: { value: 0, message: 'El precio no puede ser negativo' },
-                valueAsNumber: true,
-              })}
+              }}
+              render={({ field }) => (
+                <CurrencyInput
+                  id="precioPorUnidad"
+                  ref={field.ref}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             {errors.precioPorUnidad && (
               <p className="text-xs text-destructive">

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -40,12 +41,12 @@ export function GestionTurnos() {
   // Estado para apertura
   const [datosApertura, setDatosApertura] = useState({
     tipo: 'matutino' as TipoTurno,
-    fondoInicial: '',
+    fondoInicial: 0,
   });
 
   // Estado para cierre
   const [datosCierre, setDatosCierre] = useState({
-    efectivoReal: '',
+    efectivoReal: 0,
     observaciones: '',
   });
 
@@ -55,7 +56,7 @@ export function GestionTurnos() {
       return;
     }
 
-    if (!datosApertura.fondoInicial || parseFloat(datosApertura.fondoInicial) < 0) {
+    if (datosApertura.fondoInicial < 0) {
       toast.error('Ingresa un fondo inicial válido');
       return;
     }
@@ -67,13 +68,13 @@ export function GestionTurnos() {
         datosApertura.tipo,
         userData.id,
         userData.nombre,
-        parseFloat(datosApertura.fondoInicial),
+        datosApertura.fondoInicial,
         userData.id, // Asumiendo que el mismo usuario es cajero y encargado
         userData.nombre
       );
 
       toast.success('Turno abierto exitosamente');
-      setDatosApertura({ tipo: 'matutino', fondoInicial: '' });
+      setDatosApertura({ tipo: 'matutino', fondoInicial: 0 });
       reload();
     } catch (error: any) {
       console.error('Error abriendo turno:', error);
@@ -89,7 +90,7 @@ export function GestionTurnos() {
       return;
     }
 
-    if (!datosCierre.efectivoReal || parseFloat(datosCierre.efectivoReal) < 0) {
+    if (datosCierre.efectivoReal < 0) {
       toast.error('Ingresa el efectivo real contado');
       return;
     }
@@ -99,13 +100,13 @@ export function GestionTurnos() {
 
       await turnosService.cerrarTurno(
         turno.id,
-        parseFloat(datosCierre.efectivoReal),
+        datosCierre.efectivoReal,
         datosCierre.observaciones,
         userData?.id || 'sistema'
       );
 
       toast.success('Turno cerrado exitosamente');
-      setDatosCierre({ efectivoReal: '', observaciones: '' });
+      setDatosCierre({ efectivoReal: 0, observaciones: '' });
       reload();
     } catch (error: any) {
       console.error('Error cerrando turno:', error);
@@ -251,21 +252,11 @@ export function GestionTurnos() {
 
             <div className="space-y-2">
               <Label htmlFor="fondo-inicial">Fondo Inicial</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fondo-inicial"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={datosApertura.fondoInicial}
-                  onChange={(e) =>
-                    setDatosApertura({ ...datosApertura, fondoInicial: e.target.value })
-                  }
-                  className="pl-10"
-                />
-              </div>
+              <CurrencyInput
+                id="fondo-inicial"
+                value={datosApertura.fondoInicial}
+                onValueChange={(v) => setDatosApertura({ ...datosApertura, fondoInicial: v })}
+              />
               <p className="text-xs text-muted-foreground">
                 Cantidad de efectivo inicial en caja
               </p>
@@ -319,21 +310,11 @@ export function GestionTurnos() {
           <div className="space-y-4 max-w-2xl">
             <div className="space-y-2">
               <Label htmlFor="efectivo-real">Efectivo Real Contado *</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="efectivo-real"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={datosCierre.efectivoReal}
-                  onChange={(e) =>
-                    setDatosCierre({ ...datosCierre, efectivoReal: e.target.value })
-                  }
-                  className="pl-10"
-                />
-              </div>
+              <CurrencyInput
+                id="efectivo-real"
+                value={datosCierre.efectivoReal}
+                onValueChange={(v) => setDatosCierre({ ...datosCierre, efectivoReal: v })}
+              />
               <p className="text-xs text-muted-foreground">
                 Cuenta todo el efectivo en caja (incluyendo el fondo inicial)
               </p>
@@ -350,14 +331,14 @@ export function GestionTurnos() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Efectivo contado:</span>
                   <span className="font-medium">
-                    {formatCurrency(parseFloat(datosCierre.efectivoReal))}
+                    {formatCurrency(datosCierre.efectivoReal)}
                   </span>
                 </div>
                 <div className="flex justify-between font-bold border-t pt-2">
                   <span>Diferencia:</span>
                   <span
                     className={
-                      parseFloat(datosCierre.efectivoReal) -
+                      datosCierre.efectivoReal -
                         (turno.fondoInicial + (turno.resumen?.efectivo || 0)) >=
                       0
                         ? 'text-green-600'
@@ -365,7 +346,7 @@ export function GestionTurnos() {
                     }
                   >
                     {formatCurrency(
-                      parseFloat(datosCierre.efectivoReal) -
+                      datosCierre.efectivoReal -
                         (turno.fondoInicial + (turno.resumen?.efectivo || 0))
                     )}
                   </span>
@@ -390,7 +371,7 @@ export function GestionTurnos() {
           <div className="flex justify-end gap-3 mt-6">
             <Button
               variant="outline"
-              onClick={() => setDatosCierre({ efectivoReal: '', observaciones: '' })}
+              onClick={() => setDatosCierre({ efectivoReal: 0, observaciones: '' })}
               disabled={procesando}
             >
               Cancelar

@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -405,18 +406,10 @@ export function DatosClientePublico({
             {datosCliente.metodoPago === 'efectivo' && (
               <div className="mt-4">
                 <Label htmlFor="montoPagado">¿Con cuánto vas a pagar?</Label>
-                <Input
+                <CurrencyInput
                   id="montoPagado"
-                  type="number"
-                  step="0.01"
-                  min={total}
                   value={datosCliente.montoPagado}
-                  onChange={(e) =>
-                    onDatosChange({
-                      ...datosCliente,
-                      montoPagado: parseFloat(e.target.value) || 0,
-                    })
-                  }
+                  onValueChange={(v) => onDatosChange({ ...datosCliente, montoPagado: v })}
                   placeholder={`Mínimo $${total.toFixed(2)}`}
                   required
                   className="mt-1"

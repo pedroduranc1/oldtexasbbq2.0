@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { turnosService } from '@/lib/services/turnos.service';
 import {
   registrarMovimiento,
+  corregirMovimiento,
   getMovimientosPorTurno,
   getTotalesPorTurno,
   getEgresosPorConcepto,
@@ -138,6 +139,30 @@ export function useRegistrarMovimiento(turnoId: string) {
   });
 }
 
+/**
+ * Corrige un movimiento erróneo creando su inverso (MovimientosCaja es
+ * inmutable). Invalida movimientos y totales del turno.
+ */
+export function useCorregirMovimiento(turnoId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      movimientoId,
+      usuarioId,
+      motivo,
+    }: {
+      movimientoId: string;
+      usuarioId: string;
+      motivo: string;
+    }) => corregirMovimiento(movimientoId, usuarioId, motivo),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: cajaKeys.movimientos(turnoId) });
+      qc.invalidateQueries({ queryKey: cajaKeys.totales(turnoId) });
+      qc.invalidateQueries({ queryKey: cajaKeys.egresosPorConcepto(turnoId) });
+    },
+  });
+}
+
 // ============================================================================
 // CIERRE
 // ============================================================================
@@ -198,12 +223,14 @@ export function useCrearCierre(turnoId: string) {
     mutationFn: ({
       montoReal,
       usuarioId,
+      usuarioNombre,
       notas,
     }: {
       montoReal: number;
       usuarioId: string;
+      usuarioNombre: string;
       notas?: string;
-    }) => crearCierre(turnoId, montoReal, usuarioId, notas),
+    }) => crearCierre(turnoId, montoReal, usuarioId, usuarioNombre, notas),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: cajaKeys.turnoActivo });
       qc.invalidateQueries({ queryKey: cajaKeys.turnosCerrados });

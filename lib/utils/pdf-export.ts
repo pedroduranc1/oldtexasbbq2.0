@@ -50,9 +50,15 @@ export async function exportarCortePDF(turno: Turno) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
 
-  const infoTurno = [
+  const cerradoPorNombre = turno.corte?.cerradoPorNombre;
+  const turnoCruzado =
+    !!cerradoPorNombre &&
+    cerradoPorNombre.trim().toLowerCase() !== turno.cajeroNombre?.trim().toLowerCase();
+
+  const infoTurno: [string, string, boolean?][] = [
     ['Tipo de Turno:', turno.tipo === 'matutino' ? 'Matutino 🌅' : 'Vespertino 🌆'],
-    ['Cajero:', turno.cajeroNombre],
+    ['Abierto por:', turno.cajeroNombre],
+    ['Cerrado por:', cerradoPorNombre ?? 'Sin registrar', turnoCruzado],
   ];
 
   if (turno.encargadoNombre) {
@@ -70,11 +76,21 @@ export async function exportarCortePDF(turno: Turno) {
     `${formatearHora(turno.horaInicio)} - ${formatearHora(turno.horaFin)}`,
   ]);
 
-  infoTurno.forEach(([label, value]) => {
+  const amberColor: [number, number, number] = [217, 119, 6];
+
+  infoTurno.forEach(([label, value, resaltar]) => {
     doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...darkGray);
     doc.text(label, 14, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(value, 50, yPos);
+    if (resaltar) {
+      doc.setTextColor(...amberColor);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${value}  ⚠ Turno cruzado`, 50, yPos);
+      doc.setTextColor(...darkGray);
+    } else {
+      doc.text(value, 50, yPos);
+    }
     yPos += 6;
   });
 
@@ -227,7 +243,7 @@ export async function exportarCortePDF(turno: Turno) {
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     doc.text(
-      `Cerrado por: ${turno.corte.cerradoPor} a las ${formatearHora(
+      `Cerrado por: ${turno.corte.cerradoPorNombre ?? 'Sin registrar'} a las ${formatearHora(
         turno.corte.horaCierre
       )}`,
       14,

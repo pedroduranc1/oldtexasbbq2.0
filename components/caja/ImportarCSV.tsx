@@ -43,9 +43,12 @@ export function ImportarCSV() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
-      // Log diagnóstico: primeras 3 líneas crudas para depuración
-      const primerasLineas = text.split(/\r?\n/).slice(0, 3);
-      console.log('[ImportarCSV] Primeras líneas del CSV:', primerasLineas);
+      // Logs de diagnóstico solo en desarrollo — evitan exponer montos y
+      // nombres de cajeros en la consola del navegador en producción.
+      if (process.env.NODE_ENV !== 'production') {
+        const primerasLineas = text.split(/\r?\n/).slice(0, 3);
+        console.log('[ImportarCSV] Primeras líneas del CSV:', primerasLineas);
+      }
       try {
         const parsed = parseCajaCSV(text);
         if (parsed.length === 0) {
@@ -53,8 +56,9 @@ export function ImportarCSV() {
           console.error('[ImportarCSV] El parser devolvió 0 filas. Revisa la consola para ver las líneas crudas.');
           return;
         }
-        // Log de la primera fila parseada para verificar fechas
-        console.log('[ImportarCSV] Primera fila parseada:', parsed[0]);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[ImportarCSV] Primera fila parseada:', parsed[0]);
+        }
         setFilas(parsed);
         setEtapa('preview');
       } catch (err) {

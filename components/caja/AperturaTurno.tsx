@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { DollarSign, Sun, Sunset, Moon, Loader2, AlertTriangle } from 'lucide-react';
 import { useAbrirTurno } from '@/lib/hooks/useCaja';
 import { useAuthStore } from '@/lib/stores/auth.store';
 import { useRolGuard } from '@/lib/hooks/useRolGuard';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +48,7 @@ export function AperturaTurno() {
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     formState: { errors },
@@ -59,17 +60,20 @@ export function AperturaTurno() {
   const fondoWatch = watch('fondoInicial');
   const fondoCero = Number(fondoWatch) === 0;
 
+  // Sync tipo auto-detectado al montar.
+  // Importante: este hook debe declararse antes de cualquier `return`
+  // condicional (guardLoading / !allowed) para no violar las reglas de
+  // hooks de React (el número de hooks debe ser el mismo en cada render).
+  useEffect(() => {
+    setValue('tipo', tipoAuto);
+  }, [tipoAuto, setValue]);
+
   if (guardLoading) return null;
   if (!allowed) return (
     <div className="p-4 text-sm text-muted-foreground text-center">
       No tienes permiso para abrir turnos.
     </div>
   );
-
-  // Sync tipo auto-detectado al montar
-  useEffect(() => {
-    setValue('tipo', tipoAuto);
-  }, [tipoAuto, setValue]);
 
   const onSubmit = (data: FormValues) => {
     if (!usuario) {
@@ -159,24 +163,22 @@ export function AperturaTurno() {
                 Usar estándar (${FONDO_ESTANDAR})
               </button>
             </div>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                $
-              </span>
-              <Input
-                id="fondoInicial"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="800.00"
-                className="pl-7"
-                {...register('fondoInicial', {
-                  required: 'El fondo inicial es requerido',
-                  valueAsNumber: true,
-                  min: { value: 0, message: 'El fondo no puede ser negativo' },
-                })}
-              />
-            </div>
+            <Controller
+              name="fondoInicial"
+              control={control}
+              rules={{
+                required: 'El fondo inicial es requerido',
+                min: { value: 0, message: 'El fondo no puede ser negativo' },
+              }}
+              render={({ field }) => (
+                <CurrencyInput
+                  id="fondoInicial"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
             {errors.fondoInicial && (
               <p className="text-sm text-destructive">{errors.fondoInicial.message}</p>
             )}
