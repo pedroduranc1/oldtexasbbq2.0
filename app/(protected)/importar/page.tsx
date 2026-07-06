@@ -23,6 +23,7 @@ import {
   importarLoyverse,
   type DatosImportacionLoyverse,
   type ResultadoImportacionLoyverse,
+  type ProgresoImportacion,
 } from '@/lib/services/importacionLoyverse.service';
 import {
   Upload, FileText, CheckCircle, XCircle, Loader2, ChevronRight,
@@ -323,6 +324,7 @@ export default function ImportarPage() {
 
   const [archivos, setArchivos] = useState<ArchivoDetectado[]>([]);
   const [importando, setImportando] = useState(false);
+  const [progreso, setProgreso] = useState<ProgresoImportacion | null>(null);
   const [resultado, setResultado] = useState<ResultadoImportacionLoyverse | null>(null);
 
   const leerArchivo = (file: File): Promise<string> =>
@@ -382,6 +384,7 @@ export default function ImportarPage() {
     if (!userData?.id || !archivosValidos.length) return;
     setImportando(true);
     setResultado(null);
+    setProgreso({ etapa: 'Preparando importación…', porcentaje: 0 });
 
     try {
       const datos: DatosImportacionLoyverse = {};
@@ -401,7 +404,7 @@ export default function ImportarPage() {
         }
       }
 
-      const res = await importarLoyverse(datos, userData.id);
+      const res = await importarLoyverse(datos, userData.id, (p) => setProgreso(p));
       setResultado(res);
     } catch (e) {
       setResultado({
@@ -419,6 +422,7 @@ export default function ImportarPage() {
       });
     } finally {
       setImportando(false);
+      setProgreso(null);
     }
   };
 
@@ -520,7 +524,7 @@ export default function ImportarPage() {
                 {importando ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Importando…
+                    {progreso?.porcentaje != null ? `${progreso.porcentaje}%` : 'Importando…'}
                   </>
                 ) : (
                   <>
@@ -535,6 +539,22 @@ export default function ImportarPage() {
         </Card>
       )}
 
+      {/* Barra de progreso */}
+      {importando && progreso && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground truncate pr-4">{progreso.etapa}</span>
+            <span className="font-medium shrink-0">{progreso.porcentaje}%</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${progreso.porcentaje}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Resultado */}
       {resultado && (
         <div className="space-y-3">
@@ -545,6 +565,7 @@ export default function ImportarPage() {
             onClick={() => {
               setResultado(null);
               setArchivos([]);
+              setProgreso(null);
             }}
           >
             Nueva importación

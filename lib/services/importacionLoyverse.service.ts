@@ -61,6 +61,11 @@ export interface DatosImportacionLoyverse {
   periodoLabel?: string;
 }
 
+export interface ProgresoImportacion {
+  etapa: string;       // texto descriptivo de la etapa actual
+  porcentaje: number;  // 0-100
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function toDate(s: string): Date {
@@ -581,7 +586,8 @@ async function importarColeccionConPeriodo<T extends Record<string, unknown>>(
 
 export async function importarLoyverse(
   datos: DatosImportacionLoyverse,
-  importadoPor: string
+  importadoPor: string,
+  onProgreso?: (p: ProgresoImportacion) => void
 ): Promise<ResultadoImportacionLoyverse> {
   if (!db) throw new Error('Firestore no disponible');
 
@@ -600,31 +606,39 @@ export async function importarLoyverse(
   };
 
   const periodo = datos.periodoLabel ?? new Date().toISOString().slice(0, 7);
+  const rep = onProgreso ?? (() => {});
 
-  // Turnos primero — recibos y movimientos los enlazan
-  if (datos.cajas?.length)            await importarTurnos(datos.cajas, importadoPor, resultado);
-  if (datos.movimientos?.length)      await importarMovimientos(datos.movimientos, importadoPor, resultado);
+  // Calcular etapas activas para repartir el porcentaje
+  const etapas: Array<{ etapa: string; fn: () => Promise<void> }> = [];
+
+  if (datos.cajas?.length)
+    etapas.push({ etapa: `Importando turnos (${datos.cajas.length} registros)…`, fn: () => importarTurnos(datos.cajas!, importadoPor, resultado) });
+  if (datos.movimientos?.length)
+    etapas.push({ etapa: `Importando movimientos (${datos.movimientos.length} registros)…`, fn: () => importarMovimientos(datos.movimientos!, importadoPor, resultado) });
   if (datos.metodos?.length && datos.turnoIdParaMetodos)
-                                      await actualizarMetodosPago(datos.metodos, datos.turnoIdParaMetodos, resultado);
-  if (datos.recibos?.length)          await importarRecibos(datos.recibos, importadoPor, resultado);
-  if (datos.recibosArticulo?.length)  await importarRecibosArticulo(datos.recibosArticulo, importadoPor, resultado);
-  if (datos.resumenVentas?.length)    await importarResumenVentas(datos.resumenVentas, importadoPor, resultado);
-
+    etapas.push({ etapa: 'Actualizando métodos de pago…', fn: () => actualizarMetodosPago(datos.metodos!, datos.turnoIdParaMetodos!, resultado) });
+  if (datos.recibos?.length)
+    etapas.push({ etapa: `Importando recibos (${datos.recibos.length} registros)…`, fn: () => importarRecibos(datos.recibos!, importadoPor, resultado) });
+  if (datos.recibosArticulo?.length)
+    etapas.push({ etapa: `Importando artículos de recibos (${datos.recibosArticulo.length} registros)…`, fn: () => importarRecibosArticulo(datos.recibosArticulo!, importadoPor, resultado) });
+  if (datos.resumenVentas?.length)
+    etapas.push({ etapa: `Importando resumen de ventas (${datos.resumenVentas.length} registros)…`, fn: () => importarResumenVentas(datos.resumenVentas!, importadoPor, resultado) });
   if (datos.ventasArticulo?.length)
-    await importarColeccionConPeriodo(datos.ventasArticulo as unknown as Record<string, unknown>[],
-      'VentasArticulo', periodo, 'articulo', importadoPor, resultado.ventasArticulo, resultado.errores);
-
+    etapas.push({ etapa: `Importando ventas por artículo (${datos.ventasArticulo.length} registros)…`, fn: () => importarColeccionConPeriodo(datos.ventasArticulo! as unknown as Record<string, unknown>[], 'VentasArticulo', periodo, 'articulo', importadoPor, resultado.ventasArticulo, resultado.errores) });
   if (datos.ventasCategoria?.length)
-    await importarColeccionConPeriodo(datos.ventasCategoria as unknown as Record<string, unknown>[],
-      'VentasCategoria', periodo, 'categoria', importadoPor, resultado.ventasCategoria, resultado.errores);
-
+    etapas.push({ etapa: `Importando ventas por categoría (${datos.ventasCategoria.length} registros)…`, fn: () => importarColeccionConPeriodo(datos.ventasCategoria! as unknown as Record<string, unknown>[], 'VentasCategoria', periodo, 'categoria', importadoPor, resultado.ventasCategoria, resultado.errores) });
   if (datos.ventasEmpleado?.length)
-    await importarColeccionConPeriodo(datos.ventasEmpleado as unknown as Record<string, unknown>[],
-      'VentasEmpleado', periodo, 'empleado', importadoPor, resultado.ventasEmpleado, resultado.errores);
-
+    etapas.push({ etapa: `Importando ventas por empleado (${datos.ventasEmpleado.length} registros)…`, fn: () => importarColeccionConPeriodo(datos.ventasEmpleado! as unknown as Record<string, unknown>[], 'VentasEmpleado', periodo, 'empleado', importadoPor, resultado.ventasEmpleado, resultado.errores) });
   if (datos.ventasModificador?.length)
-    await importarColeccionConPeriodo(datos.ventasModificador as unknown as Record<string, unknown>[],
-      'VentasModificador', periodo, 'modificador', importadoPor, resultado.ventasModificador, resultado.errores);
+    etapas.push({ etapa: `Importando ventas por modificador (${datos.ventasModificador.length} registros)…`, fn: () => importarColeccionConPeriodo(datos.ventasModificador! as unknown as Record<string, unknown>[], 'VentasModificador', periodo, 'modificador', importadoPor, resultado.ventasModificador, resultado.errores) });
 
+  const total = etapas.length;
+
+  for (let i = 0; i < total; i++) {
+    rep({ etapa: etapas[i].etapa, porcentaje: Math.round((i / total) * 100) });
+    await etapas[i].fn();
+  }
+
+  rep({ etapa: 'Completado', porcentaje: 100 });
   return resultado;
 }
