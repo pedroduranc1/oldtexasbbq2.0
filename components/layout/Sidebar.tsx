@@ -20,6 +20,7 @@ import {
   BarChart3,
   Wallet,
   TrendingUp,
+  FileUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -77,6 +78,12 @@ const navigation: NavItem[] = [
     title: 'Financiero',
     href: '/financiero',
     icon: TrendingUp,
+    roles: ['admin', 'encargado'],
+  },
+  {
+    title: 'Importar',
+    href: '/importar',
+    icon: FileUp,
     roles: ['admin', 'encargado'],
   },
   {
