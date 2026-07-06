@@ -10,6 +10,7 @@ import {
   doc,
   getDocs,
   addDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -29,6 +30,7 @@ import {
   PedidoConDatos,
 } from '@/lib/types/firestore';
 import { notificacionesService } from './notificaciones.service';
+import { turnosService } from './turnos.service';
 
 class PedidosService extends BaseService<Pedido> {
   constructor() {
@@ -91,7 +93,38 @@ class PedidosService extends BaseService<Pedido> {
         detalles: `Pedido creado vía ${pedidoData.canal}`,
       });
 
-      // 5. 🔔 TRIGGER: Notificar a cocina sobre nuevo pedido
+      // 5. Actualizar resumen del turno con ventas y método de pago
+      if (pedidoData.turnoId && !pedidoData.cancelado) {
+        const total = pedidoData.totales?.total ?? 0;
+        const metodo = pedidoData.pago?.metodo;
+        const envio = pedidoData.totales?.envio ?? 0;
+        const descuento = pedidoData.totales?.descuento ?? 0;
+        const comisionRepartidor = pedidoData.reparto?.comisionRepartidor ?? 0;
+
+        const resumenDelta: Record<string, number> = {
+          totalPedidos: 1,
+          totalVentas: total,
+          totalEnvios: envio,
+          totalDescuentos: descuento,
+          totalComisionesRepartidores: comisionRepartidor,
+        };
+
+        if (metodo === 'efectivo') resumenDelta.efectivo = total;
+        else if (metodo === 'tarjeta') resumenDelta.tarjeta = total;
+        else if (metodo === 'transferencia') resumenDelta.transferencia = total;
+        else if (metodo === 'uber') resumenDelta.uber = total;
+        else if (metodo === 'didi') resumenDelta.didi = total;
+
+        // Incremento atómico para evitar condiciones de carrera
+        const turnoRef = doc(db, 'turnos', pedidoData.turnoId);
+        const incrementos: Record<string, any> = {};
+        for (const [key, val] of Object.entries(resumenDelta)) {
+          incrementos[`resumen.${key}`] = increment(val);
+        }
+        await updateDoc(turnoRef, incrementos);
+      }
+
+      // 6. 🔔 TRIGGER: Notificar a cocina sobre nuevo pedido
       await this.notificarNuevoPedido(pedidoId, numeroPedido);
 
       return pedidoId;
@@ -306,6 +339,32 @@ class PedidosService extends BaseService<Pedido> {
       usuarioNombre,
       detalles: `Pedido cancelado. Motivo: ${motivo}`,
     });
+
+    // Restar la venta del resumen del turno si el pedido no estaba ya cancelado
+    if (pedido.turnoId && !pedido.cancelado) {
+      const total = pedido.totales?.total ?? 0;
+      const metodo = pedido.pago?.metodo;
+      const envio = pedido.totales?.envio ?? 0;
+      const descuento = pedido.totales?.descuento ?? 0;
+      const comisionRepartidor = pedido.reparto?.comisionRepartidor ?? 0;
+
+      const turnoRef = doc(db, 'turnos', pedido.turnoId);
+      const decrementos: Record<string, any> = {
+        'resumen.totalPedidos': increment(-1),
+        'resumen.totalVentas': increment(-total),
+        'resumen.totalEnvios': increment(-envio),
+        'resumen.totalDescuentos': increment(-descuento),
+        'resumen.totalComisionesRepartidores': increment(-comisionRepartidor),
+      };
+
+      if (metodo === 'efectivo') decrementos['resumen.efectivo'] = increment(-total);
+      else if (metodo === 'tarjeta') decrementos['resumen.tarjeta'] = increment(-total);
+      else if (metodo === 'transferencia') decrementos['resumen.transferencia'] = increment(-total);
+      else if (metodo === 'uber') decrementos['resumen.uber'] = increment(-total);
+      else if (metodo === 'didi') decrementos['resumen.didi'] = increment(-total);
+
+      await updateDoc(turnoRef, decrementos);
+    }
   }
 
   /**
