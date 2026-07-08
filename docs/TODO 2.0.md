@@ -176,24 +176,24 @@
 **Objetivo:** rastreo granular de entradas/salidas, proveedores y análisis de ventas.
 
 ### Base de datos (Firestore)
-- [ ] Colección `MovimientosInventario` (id, ingrediente_id, tipo, cantidad, costo_unitario, motivo, fecha, turno_id)
-- [ ] Colección `Proveedores` (id, nombre, contacto, email, telefono, direccion)
-- [ ] Colección `ConceptosFinancieros` (id, nombre, tipo, categoria, descripcion)
-- [ ] Actualizar `Productos` para rastrear cantidad vendida por turno/día
+- [x] Colección `MovimientosInventario` (id, ingrediente_id, tipo, cantidad, costo_unitario, motivo, fecha, turno_id)
+- [x] Colección `Proveedores` (id, nombre, contacto, email, telefono, direccion)
+- [x] Colección `ConceptosFinancieros` (id, nombre, tipo, categoria, descripcion)
+- [x] Actualizar `Productos` para rastrear cantidad vendida por turno/día
 
 ### Servicios
-- [ ] `lib/services/movimientosInventario.service.ts` — CRUD, filtrar por tipo y fecha
-- [ ] `lib/services/proveedores.service.ts` — CRUD
-- [ ] `lib/services/conceptosFinancieros.service.ts` — CRUD
-- [ ] `lib/services/analisisVentas.service.ts` — más vendidos y tendencias
-- [ ] `lib/services/stock.service.ts` — stock actual y proyecciones
+- [x] `lib/services/movimientosInventario.service.ts` — CRUD, filtrar por tipo y fecha
+- [x] `lib/services/proveedores.service.ts` — CRUD
+- [x] `lib/services/conceptosFinancieros.service.ts` — CRUD
+- [x] `lib/services/analisisVentas.service.ts` — más vendidos y tendencias
+- [x] `lib/services/stock.service.ts` — stock actual y proyecciones
 
 ### Componentes
-- [ ] `components/inventario/RegistroEntrada.tsx`
-- [ ] `components/inventario/RegistroSalida.tsx`
-- [ ] `components/inventario/StockActual.tsx`
-- [ ] `components/inventario/ProveedoresManager.tsx`
-- [ ] `components/inventario/ProductosMasVendidos.tsx`
+- [x] `components/inventario/RegistroEntrada.tsx`
+- [x] `components/inventario/RegistroSalida.tsx`
+- [x] `components/inventario/StockActual.tsx`
+- [x] `components/inventario/ProveedoresManager.tsx`
+- [x] `components/inventario/ProductosMasVendidos.tsx`
 - [ ] `components/reportes/AnalisisInventario.tsx`
 
 ### Rutas

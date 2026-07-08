@@ -14,6 +14,8 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "seed": "tsx scripts/seed-data.ts",
     "seed:categorias": "tsx scripts/seed-categorias.ts",
+    "seed:inventario": "node scripts/seed-inventario.js",
+    "seed:completo": "node scripts/seed-completo.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

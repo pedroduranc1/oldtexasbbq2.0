@@ -595,6 +595,32 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // COLECCIÓN: INGREDIENTES (inventario)
+    // ========================================================================
+
+    match /ingredientes/{ingredienteId} {
+      // Cualquier usuario activo puede leer (cocina, cajera, etc. consultan stock)
+      allow read: if isAuthenticated() && isActive();
+
+      // Crear y actualizar — managers y cajeras (salidas desde caja)
+      allow create: if isActive() && isManager();
+      allow update: if isActive() && hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Eliminar — solo admin (soft-delete preferido)
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: RECETAS
+    // ========================================================================
+
+    match /recetas/{recetaId} {
+      allow read: if isAuthenticated() && isActive();
+      allow create, update: if isActive() && isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
     // REGLA POR DEFECTO: DENEGAR TODO LO NO ESPECIFICADO
     // ========================================================================
 
