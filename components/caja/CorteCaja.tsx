@@ -201,7 +201,7 @@ export function CorteCaja() {
   };
 
   // ── Estadísticas del periodo filtrado ────────────────────────────────────
-  const totalVentas = turnosFiltrados.reduce((s, t) => s + (t.resumen.totalVentas ?? 0), 0);
+  const totalVentas = turnosFiltrados.reduce((s, t) => s + (t.resumen?.totalVentas ?? 0), 0);
   const totalFaltantes = turnosFiltrados.reduce((s, t) => {
     const d = t.corte?.diferencia ?? 0;
     return d < 0 ? s + Math.abs(d) : s;
@@ -437,7 +437,7 @@ export function CorteCaja() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={turno.tipo === 'matutino' ? 'default' : turno.tipo === 'nocturno' ? 'outline' : 'secondary'}>
-                        {TIPOS_TURNO[turno.tipo].icon} {TIPOS_TURNO[turno.tipo].label}
+                        {TIPOS_TURNO[turno.tipo]?.icon ?? '🕐'} {TIPOS_TURNO[turno.tipo]?.label ?? turno.tipo ?? 'Sin tipo'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">{turno.cajeroNombre}</TableCell>
@@ -457,7 +457,7 @@ export function CorteCaja() {
                       {formatearHora(turno.horaInicio)} – {formatearHora(turno.horaFin)}
                     </TableCell>
                     <TableCell className="font-semibold text-sm">
-                      {formatearMoneda(turno.resumen.totalVentas)}
+                      {formatearMoneda(turno.resumen?.totalVentas ?? 0)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-0.5">

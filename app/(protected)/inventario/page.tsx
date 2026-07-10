@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StockActual } from '@/components/inventario/StockActual';
 import { ProveedoresManager } from '@/components/inventario/ProveedoresManager';
 import { ProductosMasVendidos } from '@/components/inventario/ProductosMasVendidos';
-import { RegistroEntrada } from '@/components/inventario/RegistroEntrada';
-import { RegistroSalida } from '@/components/inventario/RegistroSalida';
+import { RegistroMovimientoInventario } from '@/components/inventario/RegistroMovimientoInventario';
 
 export default function InventarioPage() {
   const [dialogEntrada, setDialogEntrada] = useState(false);
@@ -111,11 +110,13 @@ export default function InventarioPage() {
       </Tabs>
 
       {/* Dialogs */}
-      <RegistroEntrada
+      <RegistroMovimientoInventario
+        modo="entrada"
         open={dialogEntrada}
         onClose={() => setDialogEntrada(false)}
       />
-      <RegistroSalida
+      <RegistroMovimientoInventario
+        modo="salida"
         open={dialogSalida}
         onClose={() => setDialogSalida(false)}
       />

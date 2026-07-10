@@ -84,6 +84,8 @@ export function DetallesTurnoModal({ turno, open, onClose }: DetallesTurnoModalP
     }
   };
 
+  const rsm = turno.resumen;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -110,7 +112,7 @@ export function DetallesTurnoModal({ turno, open, onClose }: DetallesTurnoModalP
               <div>
                 <p className="text-sm text-muted-foreground">Tipo de Turno</p>
                 <Badge variant={turno.tipo === 'matutino' ? 'default' : 'secondary'}>
-                  {TIPOS_TURNO[turno.tipo].icon} {TIPOS_TURNO[turno.tipo].label}
+                  {TIPOS_TURNO[turno.tipo]?.icon ?? '🕐'} {TIPOS_TURNO[turno.tipo]?.label ?? turno.tipo ?? 'Sin tipo'}
                 </Badge>
               </div>
               <div>
@@ -150,18 +152,18 @@ export function DetallesTurnoModal({ turno, open, onClose }: DetallesTurnoModalP
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Total Pedidos</p>
-                <p className="text-2xl font-bold">{turno.resumen.totalPedidos}</p>
+                <p className="text-2xl font-bold">{rsm?.totalPedidos ?? 0}</p>
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Total Ventas</p>
                 <p className="text-2xl font-bold">
-                  {formatearMoneda(turno.resumen.totalVentas)}
+                  {formatearMoneda(rsm?.totalVentas ?? 0)}
                 </p>
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Total Envíos</p>
                 <p className="text-2xl font-bold">
-                  {formatearMoneda(turno.resumen.totalEnvios)}
+                  {formatearMoneda(rsm?.totalEnvios ?? 0)}
                 </p>
               </div>
             </div>
@@ -172,40 +174,40 @@ export function DetallesTurnoModal({ turno, open, onClose }: DetallesTurnoModalP
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-2 border rounded">
                 <p className="text-xs text-muted-foreground">Efectivo</p>
-                <p className="font-semibold">{formatearMoneda(turno.resumen.efectivo)}</p>
+                <p className="font-semibold">{formatearMoneda(rsm?.efectivo ?? 0)}</p>
               </div>
               <div className="p-2 border rounded">
                 <p className="text-xs text-muted-foreground">Tarjeta</p>
-                <p className="font-semibold">{formatearMoneda(turno.resumen.tarjeta)}</p>
+                <p className="font-semibold">{formatearMoneda(rsm?.tarjeta ?? 0)}</p>
               </div>
               <div className="p-2 border rounded">
                 <p className="text-xs text-muted-foreground">Transferencia</p>
                 <p className="font-semibold">
-                  {formatearMoneda(turno.resumen.transferencia)}
+                  {formatearMoneda(rsm?.transferencia ?? 0)}
                 </p>
               </div>
               <div className="p-2 border rounded">
                 <p className="text-xs text-muted-foreground">Apps (Uber/Didi)</p>
                 <p className="font-semibold">
-                  {formatearMoneda(turno.resumen.uber + turno.resumen.didi)}
+                  {formatearMoneda((rsm?.uber ?? 0) + (rsm?.didi ?? 0))}
                 </p>
               </div>
             </div>
 
-            {turno.resumen.totalDescuentos > 0 && (
+            {(rsm?.totalDescuentos ?? 0) > 0 && (
               <>
                 <Separator className="my-4" />
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-2 border rounded">
                     <p className="text-xs text-muted-foreground">Total Descuentos</p>
                     <p className="font-semibold text-destructive">
-                      -{formatearMoneda(turno.resumen.totalDescuentos)}
+                      -{formatearMoneda(rsm?.totalDescuentos ?? 0)}
                     </p>
                   </div>
                   <div className="p-2 border rounded">
                     <p className="text-xs text-muted-foreground">Comisiones Repartidores</p>
                     <p className="font-semibold">
-                      {formatearMoneda(turno.resumen.totalComisionesRepartidores)}
+                      {formatearMoneda(rsm?.totalComisionesRepartidores ?? 0)}
                     </p>
                   </div>
                 </div>

@@ -3,6 +3,58 @@
  * Old Texas BBQ - CRM
  */
 
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+// Tipo compatible con Firestore Timestamp, Date y string
+type TimestampLike = { toDate: () => Date } | Date | string | null | undefined;
+
+function tsToDate(value: TimestampLike): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') return new Date(value);
+  if ('toDate' in value) return value.toDate();
+  return null;
+}
+
+// ── Moneda ────────────────────────────────────────────────────────────────────
+
+/** $1,234 — sin decimales, para KPIs y tablas */
+export const fmtPesos = (n: number): string =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
+
+/** $1,234.56 — con decimales, para costeos y cierres */
+export const fmtPesosDecimal = (n: number): string =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2 }).format(n);
+
+/** +$50 / -$200 / $0 — diferencias de caja con signo */
+export const fmtDiferencia = (n: number): string => {
+  if (n === 0) return '$0';
+  return `${n > 0 ? '+' : ''}${fmtPesos(n)}`;
+};
+
+// ── Fechas y horas (compatibles con Firestore Timestamp) ──────────────────────
+
+/** 14:35 */
+export const fmtHora = (value: TimestampLike): string => {
+  const d = tsToDate(value);
+  return d ? format(d, 'HH:mm', { locale: es }) : '—';
+};
+
+/** 10 jul 2026 */
+export const fmtFecha = (value: TimestampLike): string => {
+  const d = tsToDate(value);
+  return d ? format(d, 'd MMM yyyy', { locale: es }) : '—';
+};
+
+/** 10/07/2026 14:35 */
+export const fmtFechaHora = (value: TimestampLike): string => {
+  const d = tsToDate(value);
+  return d ? format(d, 'dd/MM/yyyy HH:mm', { locale: es }) : '—';
+};
+
+// ── Existentes ────────────────────────────────────────────────────────────────
+
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
