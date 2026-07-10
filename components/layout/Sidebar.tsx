@@ -96,7 +96,7 @@ const navigation: NavItem[] = [
     title: 'Inventario',
     href: '/inventario',
     icon: PackageOpen,
-    roles: ['admin', 'encargado'],
+    roles: ['admin', 'encargado']
   },
   {
     title: 'Reportes',
