@@ -61,58 +61,31 @@ const nextConfig: NextConfig = {
   // Headers de Seguridad y Cache
   // ================================================
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development';
+
     return [
       {
-        // Aplicar a todos los assets estáticos
         source: '/:path*',
         headers: [
-          // Seguridad
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(self)',
-          },
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
+          ...(isDev ? [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }] : []),
         ],
       },
-      {
-        // Cache para assets estáticos (JS, CSS, imágenes)
-        source: '/(.*)\\.(js|css|woff|woff2|png|jpg|jpeg|gif|ico|svg|webp|avif)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        // Cache para archivos de sonido
-        source: '/sounds/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+      ...(!isDev ? [
+        {
+          source: '/(.*)\\.(js|css|woff|woff2|png|jpg|jpeg|gif|ico|svg|webp|avif)',
+          headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        },
+        {
+          source: '/sounds/:path*',
+          headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        },
+      ] : []),
     ];
   },
 

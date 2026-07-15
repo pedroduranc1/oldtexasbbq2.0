@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { ArrowUpCircle, ArrowDownCircle, Wallet, TrendingUp, Clock, RefreshCw, Loader2 } from 'lucide-react';
 import { useMovimientosTurno, useTotalesTurno, useEgresosPorConcepto } from '@/lib/hooks/useCaja';
 import { TIPOS_TURNO } from '@/lib/utils/constants';
@@ -13,7 +14,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { fmtPesos, fmtHora } from '@/lib/utils/formatters';
-import type { Turno, MovimientoCaja } from '@/lib/types/firestore';
+import type { Turno, MovimientoCaja, Pedido } from '@/lib/types/firestore';
+import { pedidosService } from '@/lib/services/pedidos.service';
 
 const UMBRAL_DEPOSITO = 6000;
 
@@ -25,6 +27,17 @@ export function ResumenCaja({ turno }: ResumenCajaProps) {
   const { data: totalesData, isLoading: loadingTotales, refetch: refetchTotales, isFetching } = useTotalesTurno(turno.id);
   const { data: movimientos = [], isLoading: loadingMovimientos } = useMovimientosTurno(turno.id);
   const { data: egresosPorConcepto = [] } = useEgresosPorConcepto(turno.id);
+
+  const [cambiosPendientes, setCambiosPendientes] = useState<Pedido[]>([]);
+  useEffect(() => {
+    pedidosService.getByTurno(turno.id).then((pedidos) => {
+      setCambiosPendientes(
+        pedidos.filter(
+          (p) => p.pago?.requiereCambio && !p.pago?.cambioEntregado && !p.cancelado
+        )
+      );
+    });
+  }, [turno.id]);
 
   const totalIngresos = totalesData?.totalIngresos ?? 0;
   const totalEgresos  = totalesData?.totalEgresos  ?? 0;
@@ -44,6 +57,12 @@ export function ResumenCaja({ turno }: ResumenCajaProps) {
         <AlertBox
           level="warning"
           message={`Hay ${fmtPesos(saldoEnCaja)} en caja — considera hacer un depósito. Con más de ${fmtPesos(UMBRAL_DEPOSITO)} el riesgo operativo aumenta.`}
+        />
+      )}
+      {cambiosPendientes.length > 0 && (
+        <AlertBox
+          level="error"
+          message={`${cambiosPendientes.length} pedido${cambiosPendientes.length > 1 ? 's' : ''} con cambio pendiente de entregar al cliente: ${cambiosPendientes.map((p) => `#${p.numeroPedido} (${fmtPesos(p.pago?.cambio ?? 0)})`).join(', ')}.`}
         />
       )}
 

@@ -145,6 +145,15 @@
 - [x] `CorteCaja.tsx` — mini-tarjetas de descuadre por cajero (faltantes / sobrantes)
 - [x] PDF de corte — incluir ambos cajeros cuando apertura ≠ cierre — `pdf-export.ts` ya mostraba "Abierto por"/"Cerrado por" separados; se agregó el resaltado en ámbar con "⚠ Turno cruzado" junto al nombre cuando `cerradoPorNombre !== cajeroNombre`, igual que en pantalla
 
+### Refactors y bug fixes (post-auditoría)
+- [x] `components/ui/kpi-card.tsx` — `KpiGrid` + `KpiCard` reutilizables (color, onClick, active, isLoading)
+- [x] `components/ui/alert-box.tsx` — `AlertBox` niveles info/warning/error/success
+- [x] `lib/utils/formatters.ts` — `fmtPesos`, `fmtHora`, `fmtFecha`, `fmtDiferencia` con soporte Firestore Timestamp
+- [x] `ResumenCaja.tsx` — refactorizado con KpiGrid + AlertBox (−100 líneas)
+- [x] `StockActual.tsx` — refactorizado con KpiGrid (−40 líneas)
+- [x] fix: `TIPOS_TURNO[turno.tipo]?.icon` — TypeError cuando tipo de CSV no existe en el mapa (`CorteCaja`, `ResumenCaja`, `DetallesTurnoModal`)
+- [x] fix: `turno.resumen?.totalVentas ?? 0` — TypeError cuando turno importado de CSV no tiene objeto `resumen` (`CorteCaja`, `ResumenCaja`, `DetallesTurnoModal`)
+
 ### Testing
 > Cobertura automatizada añadida en `__tests__/integration/caja-flow.test.ts` (20 tests, todos en verde).
 > Ejercita los servicios reales (`turnos.service`, `movimientosCaja.service`, `cierreCaja.service`, `importacionCaja.service`, `parseCajaCSV`) mockeando solo el SDK de Firestore, igual que el resto de la suite de integración del proyecto.
@@ -191,27 +200,28 @@
 ### Componentes
 - [x] `components/inventario/RegistroEntrada.tsx`
 - [x] `components/inventario/RegistroSalida.tsx`
-- [x] `components/inventario/StockActual.tsx`
+- [x] `components/inventario/RegistroMovimientoInventario.tsx` — fusión de Entrada + Salida (modo prop)
+- [x] `components/inventario/StockActual.tsx` — refactorizado con KpiGrid
 - [x] `components/inventario/ProveedoresManager.tsx`
 - [x] `components/inventario/ProductosMasVendidos.tsx`
-- [ ] `components/reportes/AnalisisInventario.tsx`
+- [x] `components/reportes/AnalisisInventario.tsx` — top vendidos, tendencias, ranking con gráficas
 
 ### Rutas
-- [ ] `app/(protected)/inventario/page.tsx`
-- [ ] `app/(protected)/inventario/movimientos/page.tsx`
-- [ ] `app/(protected)/inventario/proveedores/page.tsx`
-- [ ] `app/(protected)/inventario/analisis/page.tsx`
+- [x] `app/(protected)/inventario/page.tsx` — tabs: Stock · Proveedores · Más vendidos
+- [x] `app/(protected)/inventario/movimientos/page.tsx` — historial + filtros + export CSV + KPIs
+- [x] `app/(protected)/inventario/proveedores/page.tsx` — ruta propia con ProveedoresManager
+- [x] `app/(protected)/inventario/analisis/page.tsx` — gráficas y ranking por periodo
 
 ### Testing
-- [ ] Registrar entradas y verificar actualización de stock
-- [ ] Registrar salidas/merma y validar diferenciación
-- [ ] Verificar cálculo de productos vendidos
+- [x] Registrar entradas y verificar actualización de stock — `registrarEntrada()` usa `runTransaction`: escribe el movimiento y actualiza `stockActual` en `ingredientes` atómicamente
+- [x] Registrar salidas/merma y validar diferenciación — `registrarSalida()` acepta `tipo: 'salida' | 'merma' | 'venta'`, cada uno se guarda con su tipo exacto en Firestore
+- [x] Verificar cálculo de productos vendidos — `getTopProductosVendidos()` suma `cantidadVendidaPorDia` por rango de fechas y ordena descendente
 
 ### ✅ Criterios de aceptación (Definition of Done)
-- [ ] Cada movimiento queda clasificado por tipo (entrada/salida/merma/gasto) y fecha
-- [ ] El stock se recalcula automáticamente con cada entrada y salida
-- [ ] Los proveedores quedan vinculados a las entradas de compra
-- [ ] El análisis muestra correctamente los productos de mayor rotación
+- [x] Cada movimiento queda clasificado por tipo (entrada/salida/merma/gasto) y fecha — campo `tipo: TipoMovimientoInventario` + `fecha: Timestamp` en cada documento
+- [x] El stock se recalcula automáticamente con cada entrada y salida — `runTransaction` en `registrarEntrada` y `registrarSalida` actualiza `ingredientes.stockActual` en la misma operación atómica
+- [x] Los proveedores quedan vinculados a las entradas de compra — `registrarEntrada()` persiste `proveedorId` y `proveedorNombre` en el movimiento; `RegistroMovimientoInventario` modo entrada muestra el selector de proveedor
+- [x] El análisis muestra correctamente los productos de mayor rotación — `AnalisisInventario.tsx` consume `getResumenAnalisis()` con filtro de periodo (7/30/90 días) y renderiza gráfica de barras + ranking
 
 ---
 
@@ -286,6 +296,44 @@
 
 ---
 
+---
+
+## Backlog — Errores operativos detectados en bitácora del cliente
+
+> Originados en la bitácora real enviada por el cliente. Los marcados con `[x]` ya tienen solución implementada en el sistema.
+
+### ✅ Resueltos con módulos existentes
+
+- [x] **Problema 3 — Adelantos de nómina y venta de subproductos sin registro**
+  - Solución: conceptos `Adelanto de nómina` y `Venta subproducto` agregados al catálogo `ConceptosFinancieros`. Se registran como movimiento de caja desde `/caja` con evidencia en Firestore.
+
+- [x] **Problema 4 — Anticipo de pedido especial no ligado**
+  - Solución: concepto `Anticipo pedido especial` agregado al catálogo de ingresos. Se registra en caja con descripción obligatoria cuando aplica.
+
+- [x] **Problema 5 — Reenvíos y cortesías sin control**
+  - Solución: conceptos `Reenvío / Cortesía` y `Descuento a nómina` agregados al catálogo de egresos con descripción.
+
+- [x] **Problema 1 — Corrección de pedido Uber/Didi no registrada**
+  - Solución: concepto `Corrección pedido Uber/Didi` en catálogo de egresos con campo descripción obligatorio para anotar el ID externo.
+
+- [x] **Problema 6 — Cambio no entregado al cliente**
+  - Solución: campo `pago.cambioEntregado: boolean` agregado al tipo `Pedido`. Alerta roja en `ResumenCaja` que lista todos los pedidos del turno con cambio pendiente de entregar.
+
+- [x] **Problema 7 — Mermas de producción no capturadas en tiempo real**
+  - Solución: botón "Registrar merma" agregado directamente en `/cocina`. Abre `RegistroMovimientoInventario` con modo salida/merma sin salir de la pantalla de cocina.
+
+### 🔴 Pendientes — requieren módulos nuevos
+
+- [ ] **Problema 2 — Cancelaciones no reflejadas correctamente en corte**
+  - Gap: cuando se cancela un pedido ya cobrado, no se genera un egreso de corrección en `MovimientosCaja` ni queda evidencia del motivo en el corte.
+  - Solución propuesta: modificar `pedidosService.cancelar()` para crear automáticamente un movimiento de caja con concepto `Cancelación de pedido`, monto negativo y referencia al `pedidoId`. Mostrar en `CorteCaja` una sección de cancelaciones del periodo.
+
+- [ ] **Problema 8 — Recepción de proveedores manual y tardía**
+  - Gap: no existe flujo guiado de recepción de mercancía. El encargado actualiza el stock manualmente ingrediente por ingrediente.
+  - Solución propuesta: pantalla de `RecepciónProveedor` que muestre los ingredientes esperados del proveedor, permita confirmar cantidades recibidas en un solo formulario y ejecute todos los `registrarEntrada()` en batch con un clic.
+
+---
+
 ## Fase 5 — Pulido, testing exhaustivo y Go-Live · Semanas 9–10
 
 **Objetivo:** refinamiento de UI/UX, pruebas integrales, documentación y despliegue.
@@ -328,8 +376,8 @@
 
 | Hito | Semana | Estado |
 |------|--------|--------|
-| Caja operativa | S2 | [ ] |
-| Inventario controlado | S5 | [ ] |
+| Caja operativa | S2 | [x] |
+| Inventario controlado | S5 | [x] |
 | Dashboard G/P | S7 | [ ] |
 | Nómina integrada | S8 | [ ] |
 | Go-Live producción | S10 | [ ] |

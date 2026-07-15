@@ -149,6 +149,7 @@ export interface PagoPedido {
   requiereCambio: boolean;
   montoRecibido?: number;
   cambio?: number;
+  cambioEntregado?: boolean;  // true cuando el cajero confirma que entregó el cambio
   pagoAdelantado: boolean;
   comprobantePago?: string;
 }

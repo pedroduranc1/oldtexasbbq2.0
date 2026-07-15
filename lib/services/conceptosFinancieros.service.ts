@@ -110,21 +110,27 @@ export async function eliminarConcepto(id: string): Promise<void> {
 // Llama esta función una sola vez para poblar la colección en un entorno vacío.
 export async function seedConceptos(): Promise<void> {
   const ingresos: Omit<ConceptoFinanciero, 'id'>[] = [
-    { nombre: 'Venta mostrador',       tipo: 'ingreso', categoria: 'ventas',     activo: true, orden: 1 },
-    { nombre: 'Venta delivery',        tipo: 'ingreso', categoria: 'delivery',   activo: true, orden: 2 },
-    { nombre: 'Anticipo cliente',      tipo: 'ingreso', categoria: 'ventas',     activo: true, orden: 3 },
-    { nombre: 'Recuperación faltante', tipo: 'ingreso', categoria: 'operacion',  activo: true, orden: 4 },
-    { nombre: 'Otro ingreso',          tipo: 'ingreso', categoria: 'otro',       activo: true, orden: 99 },
+    { nombre: 'Venta mostrador',          tipo: 'ingreso', categoria: 'ventas',    activo: true, orden: 1 },
+    { nombre: 'Venta delivery',           tipo: 'ingreso', categoria: 'delivery',  activo: true, orden: 2 },
+    { nombre: 'Anticipo pedido especial', tipo: 'ingreso', categoria: 'ventas',    activo: true, orden: 3, descripcion: 'Anticipo de reserva o pedido fuera del flujo normal' },
+    { nombre: 'Anticipo cliente',         tipo: 'ingreso', categoria: 'ventas',    activo: true, orden: 4 },
+    { nombre: 'Recuperación faltante',    tipo: 'ingreso', categoria: 'operacion', activo: true, orden: 5 },
+    { nombre: 'Venta subproducto',        tipo: 'ingreso', categoria: 'operacion', activo: true, orden: 6, descripcion: 'Ej: aceite quemado, cajas, material reutilizable' },
+    { nombre: 'Otro ingreso',             tipo: 'ingreso', categoria: 'otro',      activo: true, orden: 99 },
   ];
   const egresos: Omit<ConceptoFinanciero, 'id'>[] = [
-    { nombre: 'Compra insumos',        tipo: 'egreso', categoria: 'insumos',      activo: true, orden: 1 },
-    { nombre: 'Pago proveedor',        tipo: 'egreso', categoria: 'insumos',      activo: true, orden: 2 },
-    { nombre: 'Nómina',                tipo: 'egreso', categoria: 'nomina',       activo: true, orden: 3 },
-    { nombre: 'Servicios (agua/luz/gas)', tipo: 'egreso', categoria: 'servicios', activo: true, orden: 4 },
-    { nombre: 'Mantenimiento',         tipo: 'egreso', categoria: 'mantenimiento',activo: true, orden: 5 },
-    { nombre: 'Retiro para depósito',  tipo: 'egreso', categoria: 'operacion',   activo: true, orden: 6 },
-    { nombre: 'Gastos varios',         tipo: 'egreso', categoria: 'otro',        activo: true, orden: 7 },
-    { nombre: 'Otro egreso',           tipo: 'egreso', categoria: 'otro',        activo: true, orden: 99 },
+    { nombre: 'Compra insumos',              tipo: 'egreso', categoria: 'insumos',       activo: true, orden: 1 },
+    { nombre: 'Pago proveedor',              tipo: 'egreso', categoria: 'insumos',       activo: true, orden: 2 },
+    { nombre: 'Nómina',                      tipo: 'egreso', categoria: 'nomina',        activo: true, orden: 3 },
+    { nombre: 'Adelanto de nómina',          tipo: 'egreso', categoria: 'nomina',        activo: true, orden: 4, descripcion: 'Pago anticipado de salario a empleado' },
+    { nombre: 'Servicios (agua/luz/gas)',     tipo: 'egreso', categoria: 'servicios',     activo: true, orden: 5 },
+    { nombre: 'Mantenimiento',               tipo: 'egreso', categoria: 'mantenimiento', activo: true, orden: 6 },
+    { nombre: 'Retiro para depósito',        tipo: 'egreso', categoria: 'operacion',     activo: true, orden: 7 },
+    { nombre: 'Corrección pedido Uber/Didi', tipo: 'egreso', categoria: 'delivery',      activo: true, orden: 8, descripcion: 'Reembolso o gasto adicional por error en pedido de app externa' },
+    { nombre: 'Reenvío / Cortesía',          tipo: 'egreso', categoria: 'operacion',     activo: true, orden: 9, descripcion: 'Costo de reenvío o cortesía por error de empaque o entrega' },
+    { nombre: 'Descuento a nómina',          tipo: 'egreso', categoria: 'nomina',        activo: true, orden: 10, descripcion: 'Descuento aplicado al empleado responsable del error' },
+    { nombre: 'Gastos varios',               tipo: 'egreso', categoria: 'otro',          activo: true, orden: 11 },
+    { nombre: 'Otro egreso',                 tipo: 'egreso', categoria: 'otro',          activo: true, orden: 99 },
   ];
   for (const c of [...ingresos, ...egresos]) {
     await crearConcepto(c);

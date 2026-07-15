@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { TableroComandas } from '@/components/cocina/TableroComandas';
-import { ChefHat, Maximize2, Minimize2 } from 'lucide-react';
+import { RegistroMovimientoInventario } from '@/components/inventario/RegistroMovimientoInventario';
+import { ChefHat, Maximize2, Minimize2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function CocinaPage() {
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
+  const [dialogMerma, setDialogMerma] = useState(false);
 
   const togglePantallaCompleta = () => {
     if (!document.fullscreenElement) {
@@ -41,6 +43,17 @@ export default function CocinaPage() {
             Actualizando en tiempo real
           </div>
 
+          {/* Botón merma rápida */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDialogMerma(true)}
+            className="gap-2 border-red-300 text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+          >
+            <Trash2 className="h-4 w-4" />
+            Registrar merma
+          </Button>
+
           {/* Botón pantalla completa */}
           <Button
             variant="outline"
@@ -67,6 +80,13 @@ export default function CocinaPage() {
       <div className="flex-1 overflow-hidden">
         <TableroComandas />
       </div>
+
+      {/* Dialog merma rápida */}
+      <RegistroMovimientoInventario
+        modo="salida"
+        open={dialogMerma}
+        onClose={() => setDialogMerma(false)}
+      />
     </div>
   );
 }

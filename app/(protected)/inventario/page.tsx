@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PackagePlus, PackageMinus, Package2, Building2, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
+import { PackagePlus, PackageMinus, Package2, Building2, TrendingUp, History, BarChart2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,6 +45,52 @@ export default function InventarioPage() {
             Registrar entrada
           </Button>
         </div>
+      </div>
+
+      {/* Accesos rápidos */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Link href="/inventario/movimientos">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-950">
+                <History className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Movimientos</p>
+                <p className="text-xs text-muted-foreground">Historial completo</p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/inventario/proveedores">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950">
+                <Building2 className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Proveedores</p>
+                <p className="text-xs text-muted-foreground">Directorio completo</p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/inventario/analisis">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-950">
+                <BarChart2 className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Análisis</p>
+                <p className="text-xs text-muted-foreground">Rotación y costos</p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Tabs principales */}

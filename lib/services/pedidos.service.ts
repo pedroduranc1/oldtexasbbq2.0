@@ -31,6 +31,7 @@ import {
 } from '@/lib/types/firestore';
 import { notificacionesService } from './notificaciones.service';
 import { turnosService } from './turnos.service';
+import { registrarMovimiento as registrarMovimientoCaja } from './movimientosCaja.service';
 
 class PedidosService extends BaseService<Pedido> {
   constructor() {
@@ -364,6 +365,23 @@ class PedidosService extends BaseService<Pedido> {
       else if (metodo === 'didi') decrementos['resumen.didi'] = increment(-total);
 
       await updateDoc(turnoRef, decrementos);
+
+      // Registrar egreso en caja si el pago fue en efectivo (dinero que ya entró y ahora se devuelve)
+      if (total > 0 && metodo === 'efectivo') {
+        try {
+          await registrarMovimientoCaja({
+            turno_id: pedido.turnoId,
+            tipo: 'egreso',
+            monto: total,
+            concepto: 'Cancelación de pedido',
+            descripcion: `Pedido #${pedido.numeroPedido} cancelado. Motivo: ${motivo}`,
+            fecha: Timestamp.now(),
+            usuario_id: usuarioId,
+          });
+        } catch {
+          // No bloquear la cancelación si el registro de caja falla
+        }
+      }
     }
   }
 
