@@ -324,6 +324,9 @@
 - [x] Modal `DetallesTurnoModal` con información completa
 - [x] Ver transacciones del turno
 - [x] Exportar PDF del corte con diseño profesional
+- [x] fix: TypeError `TIPOS_TURNO[turno.tipo]` cuando tipo no existe en mapa (turnos CSV)
+- [x] fix: TypeError `turno.resumen.*` undefined en `CorteCaja`, `ResumenCaja` y `DetallesTurnoModal`
+- [x] Refactor `ResumenCaja` con `KpiGrid` y `AlertBox` (−100 líneas)
 
 ### Reportes y Métricas
 
@@ -516,10 +519,12 @@
 - [x] Componente `Toast` para notificaciones - Sonner (ya implementado)
 - [x] Componente `ConfirmDialog` - AlertDialog de shadcn/ui
 - [x] Componente `Tabs` - shadcn/ui
+- [x] Componente `KpiGrid` + `KpiCard` - `components/ui/kpi-card.tsx`
+- [x] Componente `AlertBox` (info/warning/error/success) - `components/ui/alert-box.tsx`
 
 ### Utilidades ✅
 
-- [x] Crear `formatters.ts` (formatear moneda, fecha, etc.)
+- [x] Crear `formatters.ts` (formatear moneda, fecha, etc.) — extendido con `fmtPesos`, `fmtHora`, `fmtFecha`, `fmtDiferencia`, manejo de Firestore Timestamp
 - [x] Crear `validators.ts` (validar email, teléfono, etc.)
 - [x] Crear `constants.ts` (estados, roles, canales, etc.)
 - [x] Crear hook `useDebounce`
@@ -899,7 +904,7 @@ Sistema completo de gestión de inventario basado en el archivo "Costeo de recet
 
 #### 1. Colección `ingredientes`
 
-- [ ] Diseñar schema de ingredientes
+- [x] Diseñar schema de ingredientes
 ```typescript
 interface Ingrediente {
   id: string;
@@ -934,7 +939,7 @@ interface Ingrediente {
 
 #### 2. Colección `recetas`
 
-- [ ] Diseñar schema de recetas
+- [x] Diseñar schema de recetas
 ```typescript
 interface Receta {
   id: string;
@@ -963,7 +968,7 @@ interface Receta {
 
 #### 3. Colección `movimientos_inventario`
 
-- [ ] Diseñar schema de movimientos
+- [x] Diseñar schema de movimientos
 ```typescript
 interface MovimientoInventario {
   id: string;
@@ -992,7 +997,7 @@ interface MovimientoInventario {
 
 #### 4. Colección `ordenes_compra`
 
-- [ ] Diseñar schema de órdenes de compra
+- [x] Diseñar schema de órdenes de compra
 ```typescript
 interface OrdenCompra {
   id: string;
@@ -1025,7 +1030,7 @@ interface OrdenCompra {
 
 #### 5. Colección `proveedores`
 
-- [ ] Diseñar schema de proveedores
+- [x] Diseñar schema de proveedores
 ```typescript
 interface Proveedor {
   id: string;
@@ -1050,7 +1055,7 @@ interface Proveedor {
 
 #### 6. Colección `conteo_fisico`
 
-- [ ] Diseñar schema de inventarios físicos
+- [x] Diseñar schema de inventarios físicos
 ```typescript
 interface ConteoFisico {
   id: string;
@@ -1237,16 +1242,16 @@ interface ConteoFisico {
 #### Movimientos de Inventario
 
 - [ ] Crear página `/inventario/movimientos`
-- [ ] Componente `RegistrarMovimiento`
-  - [ ] Modal para registrar entrada/salida/ajuste
-  - [ ] Selector de tipo de movimiento
-  - [ ] Selector de ingrediente
-  - [ ] Input de cantidad
-  - [ ] Campo de motivo/notas
-  - [ ] Referencia (orden de compra, pedido, etc.)
-  - [ ] Selector de proveedor (si es entrada)
-  - [ ] Cálculo automático de nuevo stock
-  - [ ] Preview de impacto en stock
+- [x] Componente `RegistrarMovimiento` → `RegistroMovimientoInventario` (modo: entrada | salida)
+  - [x] Modal para registrar entrada/salida/ajuste
+  - [x] Selector de tipo de movimiento
+  - [x] Selector de ingrediente
+  - [x] Input de cantidad
+  - [x] Campo de motivo/notas
+  - [x] Referencia (orden de compra, pedido, etc.)
+  - [x] Selector de proveedor (si es entrada)
+  - [x] Cálculo automático de nuevo stock
+  - [x] Preview de impacto en stock
 
 - [ ] Componente `HistorialMovimientos`
   - [ ] Tabla con todos los movimientos
@@ -1315,24 +1320,23 @@ interface ConteoFisico {
 
 #### Proveedores
 
-- [ ] Crear página `/inventario/proveedores`
-- [ ] Componente `ListaProveedores`
-  - [ ] Tabla de proveedores
-  - [ ] Columnas: Nombre, Contacto, Teléfono, Categorías, Estado
-  - [ ] Filtros: Categoría, Estado (activo/inactivo)
-  - [ ] Búsqueda por nombre
-  - [ ] Acciones: Ver, Editar, Eliminar
+- [x] Crear página `/inventario/proveedores` → Tab en `/inventario` + `ProveedoresManager`
+- [x] Componente `ListaProveedores` → `ProveedoresManager`
+  - [x] Tabla de proveedores
+  - [x] Columnas: Nombre, Contacto, Teléfono, Categorías, Estado
+  - [x] Filtros: Categoría, Estado (activo/inactivo)
+  - [x] Búsqueda por nombre
+  - [x] Acciones: Ver, Editar, Eliminar
 
-- [ ] Componente `FormProveedor`
-  - [ ] Modal para crear/editar proveedor
-  - [ ] Campos: Nombre, Razón Social, RFC
-  - [ ] Información de contacto (nombre, teléfono, email)
-  - [ ] Dirección
-  - [ ] Multi-selector de categorías
-  - [ ] Calificación (estrellas)
-  - [ ] Tiempo de entrega promedio
-  - [ ] Notas adicionales
-  - [ ] Validaciones: Campos requeridos, formato de email
+- [x] Componente `FormProveedor`
+  - [x] Modal para crear/editar proveedor
+  - [x] Campos: Nombre, Razón Social, RFC
+  - [x] Información de contacto (nombre, teléfono, email)
+  - [x] Dirección
+  - [x] Multi-selector de categorías
+  - [x] Tiempo de entrega promedio
+  - [x] Notas adicionales
+  - [x] Validaciones: Campos requeridos, formato de email
 
 - [ ] Componente `DetalleProveedor`
   - [ ] Modal con información completa
@@ -1549,14 +1553,14 @@ interface ConteoFisico {
 
 ### Migración de Datos Inicial
 
-- [ ] Crear script `seed-inventario.ts`
-  - [ ] Importar ingredientes desde Excel
-  - [ ] Mapear categorías
-  - [ ] Establecer stocks iniciales
-  - [ ] Importar recetas desde Excel
-  - [ ] Vincular recetas con productos del menú
-  - [ ] Importar subrecetas
-  - [ ] Crear proveedores base
+- [x] Crear script `seed-inventario.ts`
+  - [x] Importar ingredientes desde Excel
+  - [x] Mapear categorías
+  - [x] Establecer stocks iniciales
+  - [x] Importar recetas desde Excel
+  - [x] Vincular recetas con productos del menú
+  - [x] Importar subrecetas
+  - [x] Crear proveedores base
 
 - [ ] Crear herramienta de importación masiva
   - [ ] Leer archivo Excel de costeo
