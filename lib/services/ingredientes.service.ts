@@ -158,11 +158,6 @@ class IngredientesService extends BaseService<Ingrediente> {
         // porque Firestore no soporta comparar dos campos
       }
 
-      // Filtro de sin stock
-      if (filtros?.sinStock) {
-        q = query(q, where('stockActual', '==', 0));
-      }
-
       // Ordenar por nombre
       q = query(q, orderBy('nombre', 'asc'));
 
@@ -181,11 +176,14 @@ class IngredientesService extends BaseService<Ingrediente> {
           : undefined,
       })) as Ingrediente[];
 
-      // Aplicar filtro de stock bajo post-query
+      // Aplicar filtros post-query (evitan índices compuestos extra en Firestore)
       if (filtros?.stockBajo) {
         ingredientes = ingredientes.filter(
           (ing) => ing.stockActual < ing.stockMinimo && ing.stockActual > 0
         );
+      }
+      if (filtros?.sinStock) {
+        ingredientes = ingredientes.filter((ing) => ing.stockActual <= 0);
       }
 
       // Aplicar filtro de búsqueda
