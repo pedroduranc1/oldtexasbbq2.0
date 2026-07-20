@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   ArrowDownCircle, ArrowUpCircle, RefreshCw, Search, Download,
-  AlertTriangle, Trash2, PackageCheck, SlidersHorizontal,
+  AlertTriangle, Trash2, PackageCheck, SlidersHorizontal, Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -45,18 +46,24 @@ export default function MovimientosInventarioPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | TipoMovimientoInventario>('todos');
   const [pagina, setPagina] = useState(1);
+  const [fechaInicio, setFechaInicio] = useState(() => format(subDays(new Date(), 29), 'yyyy-MM-dd'));
+  const [fechaFin, setFechaFin]       = useState(() => format(new Date(), 'yyyy-MM-dd'));
 
   const cargar = async () => {
     setCargando(true);
     try {
-      const data = await getMovimientos({ limite: 500 });
+      const data = await getMovimientos({
+        limite: 1000,
+        fechaInicio: startOfDay(new Date(fechaInicio + 'T00:00:00')),
+        fechaFin:    endOfDay(new Date(fechaFin + 'T23:59:59')),
+      });
       setMovimientos(data);
     } finally {
       setCargando(false);
     }
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { cargar(); }, [fechaInicio, fechaFin]);
 
   const filtrados = useMemo(() => {
     return movimientos.filter((m) => {
@@ -150,34 +157,63 @@ export default function MovimientosInventarioPage() {
       {/* Filtros */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <CardTitle className="text-sm">Historial</CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar ingrediente, motivo…"
-                  value={busqueda}
-                  onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
-                  className="pl-8 w-56"
-                />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                Historial
+              </CardTitle>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Rango de fechas */}
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-xs text-muted-foreground shrink-0">Desde</Label>
+                  <Input
+                    type="date"
+                    value={fechaInicio}
+                    max={fechaFin}
+                    onChange={(e) => { setFechaInicio(e.target.value); setPagina(1); }}
+                    className="w-36 h-8 text-sm"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-xs text-muted-foreground shrink-0">Hasta</Label>
+                  <Input
+                    type="date"
+                    value={fechaFin}
+                    min={fechaInicio}
+                    max={format(new Date(), 'yyyy-MM-dd')}
+                    onChange={(e) => { setFechaFin(e.target.value); setPagina(1); }}
+                    className="w-36 h-8 text-sm"
+                  />
+                </div>
+                <div className="w-px h-5 bg-border" />
+                {/* Búsqueda y tipo */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar…"
+                    value={busqueda}
+                    onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
+                    className="pl-8 w-44 h-8 text-sm"
+                  />
+                </div>
+                <Select value={filtroTipo} onValueChange={(v) => { setFiltroTipo(v as typeof filtroTipo); setPagina(1); }}>
+                  <SelectTrigger className="w-32 h-8 text-sm">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="entrada">Entradas</SelectItem>
+                    <SelectItem value="salida">Salidas</SelectItem>
+                    <SelectItem value="merma">Mermas</SelectItem>
+                    <SelectItem value="venta">Ventas</SelectItem>
+                    <SelectItem value="ajuste">Ajustes</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" size="sm" onClick={cargar} disabled={cargando} className="h-8 w-8 p-0">
+                  <RefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
-              <Select value={filtroTipo} onValueChange={(v) => { setFiltroTipo(v as typeof filtroTipo); setPagina(1); }}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="entrada">Entradas</SelectItem>
-                  <SelectItem value="salida">Salidas</SelectItem>
-                  <SelectItem value="merma">Mermas</SelectItem>
-                  <SelectItem value="venta">Ventas</SelectItem>
-                  <SelectItem value="ajuste">Ajustes</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="ghost" size="sm" onClick={cargar} disabled={cargando}>
-                <RefreshCw className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`} />
-              </Button>
             </div>
           </div>
         </CardHeader>
