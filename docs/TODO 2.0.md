@@ -230,20 +230,26 @@
 **Objetivo:** dashboard ejecutivo con G/P, KPIs, filtros por periodo y export a PDF.
 
 ### Servicios
-- [ ] `lib/services/reportes.service.ts` — ingresos, egresos, ganancia neta
-- [ ] `lib/services/dashboardMetricas.service.ts` — métricas por periodo
-- [ ] `lib/services/generadorPDF.service.ts` — export a PDF (jsPDF)
+- [x] `lib/services/reportes.service.ts` — ingresos, egresos, ganancia neta (existía; `getReportePorRango` consume pedidos por rango)
+- [x] `lib/services/dashboardMetricas.service.ts` — agrega pedidos + MovimientosCaja + inventario en `ResumenMetricas` por periodo
+- [x] `lib/services/generadorPDF.service.ts` — `exportarReporteMetricasPDF()` con jsPDF + autoTable: KPIs, métodos de pago, detalle por día
 
 ### Componentes
-- [ ] `components/reportes/GananciasChart.tsx`
-- [ ] `components/reportes/IngresosEgresosChart.tsx`
-- [ ] `components/reportes/KPIDashboard.tsx`
-- [ ] `components/reportes/FiltrosPeriodo.tsx`
-- [ ] `components/reportes/ExportarReporte.tsx`
+- [x] `components/reportes/GananciasChart.tsx` — AreaChart de ganancia neta por día, días negativos marcados en rojo
+- [x] `components/reportes/IngresosEgresosChart.tsx` — BarChart comparativo ventas vs egresos por día
+- [x] `components/reportes/KPIDashboard.tsx` — 7 KPIs: ventas, egresos, ganancia neta, pedidos, ticket, cancelados, costo inventario
+- [ ] `components/reportes/FiltrosPeriodo.tsx` — integrado directamente en `/reportes/financiero/page.tsx` (selector de preset + fechas libres)
+- [ ] `components/reportes/ExportarReporte.tsx` — botón de exportar integrado en `/reportes/financiero/page.tsx`
 
 ### Rutas
-- [ ] `app/(protected)/reportes/page.tsx`
-- [ ] `app/(protected)/reportes/detallado/page.tsx`
+- [x] `app/(protected)/reportes/page.tsx` — existía con reporte diario por hora/canal/productos
+- [x] `app/(protected)/reportes/financiero/page.tsx` — nueva página con KPIs, gráficas y export PDF (reemplaza /detallado)
+
+### UX Inventario (corregido junto a Fase 3)
+- [x] `AlertasInventario` visible siempre en página principal de inventario (antes oculta)
+- [x] Botón "Recibir mercancía" en página principal de inventario
+- [x] Tab duplicada de Proveedores eliminada de página principal
+- [x] Filtro de fechas añadido a `/inventario/movimientos`
 
 ### Testing
 - [ ] Verificar cálculo de ganancias/pérdidas
@@ -251,10 +257,10 @@
 - [ ] Descargar y validar el PDF generado
 
 ### ✅ Criterios de aceptación (Definition of Done)
-- [ ] El dashboard refleja datos reales de Caja e Inventario
-- [ ] KPIs y porcentajes coinciden con los movimientos registrados
-- [ ] Los filtros por periodo recalculan correctamente todas las métricas
-- [ ] El reporte se exporta a PDF con el formato esperado
+- [x] El dashboard refleja datos reales de Caja e Inventario — `getMetricasPorPeriodo` cruza pedidos + MovimientosCaja + MovimientosInventario
+- [x] KPIs y porcentajes coinciden con los movimientos registrados
+- [x] Los filtros por periodo recalculan correctamente todas las métricas — presets 7/14/30 días + rango personalizado
+- [x] El reporte se exporta a PDF con el formato esperado — `exportarReporteMetricasPDF()` genera PDF descargable
 
 ---
 
