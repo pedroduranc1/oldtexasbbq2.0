@@ -1,27 +1,34 @@
 /**
- * Servicio de Reportes y Métricas
- * Old Texas BBQ - CRM
+ * Servicio de Reportes y Métricas — Old Texas BBQ CRM
  *
- * Genera reportes y estadísticas del negocio
+ * Fuente de datos:
+ *   - KPIs diarios → turno.resumen (ya agregado, sin query compleja)
+ *   - Desglose por hora → pedidos del turno (filtro por turnoId, sin rango de fechas)
+ *   - Productos más vendidos → items de los pedidos del turno
+ *   - Repartidores → pedidos entregados del turno
+ *
+ * Por qué NO usamos fechaCreacion para filtrar pedidos:
+ *   serverTimestamp() en Firestore puede causar inconsistencias en queries
+ *   de rango si el índice no está definido. Los turnos tienen `fecha: string`
+ *   (YYYY-MM-DD) que es un campo simple y siempre confiable.
  */
 
-import { Timestamp } from 'firebase/firestore';
-import { pedidosService } from './pedidos.service';
-import {
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { format, subDays } from 'date-fns';
+import { turnosService } from './turnos.service';
+import type {
   Pedido,
   ItemPedido,
   CanalVenta,
   MetodoPago,
   EstadoPedido,
 } from '@/lib/types/firestore';
-import { startOfDay, endOfDay, subDays, format } from 'date-fns';
 
-// ============================================================================
-// TIPOS DE REPORTES
-// ============================================================================
+// ─── Tipos públicos ────────────────────────────────────────────────────────────
 
 export interface VentasPorHora {
-  hora: string; // "08:00", "09:00", etc.
+  hora: string;
   cantidad: number;
   total: number;
 }
@@ -46,7 +53,7 @@ export interface DesempenoRepartidor {
   pedidosEntregados: number;
   totalEntregado: number;
   comisionesGanadas: number;
-  tiempoPromedioEntrega: number; // en minutos
+  tiempoPromedioEntrega: number;
 }
 
 export interface ResumenDiario {
@@ -63,9 +70,9 @@ export interface ResumenDiario {
 export interface ComparativaConDiaAnterior {
   hoy: ResumenDiario;
   ayer: ResumenDiario;
-  variacionPedidos: number; // porcentaje
-  variacionVentas: number; // porcentaje
-  variacionTicketPromedio: number; // porcentaje
+  variacionPedidos: number;
+  variacionVentas: number;
+  variacionTicketPromedio: number;
 }
 
 export interface ReporteFull {
@@ -76,150 +83,140 @@ export interface ReporteFull {
   desempenoRepartidores: DesempenoRepartidor[];
 }
 
-// ============================================================================
-// SERVICIO DE REPORTES
-// ============================================================================
+// ─── Helpers internos ──────────────────────────────────────────────────────────
+
+function fechaStr(d: Date): string {
+  return format(d, 'yyyy-MM-dd');
+}
+
+/** Obtiene todos los pedidos de una lista de turnoIds directamente por turnoId. */
+async function getPedidosDeTurnos(turnoIds: string[]): Promise<Pedido[]> {
+  if (!db || turnoIds.length === 0) return [];
+  // Firestore "in" acepta máximo 30 valores; dividimos en chunks si hace falta
+  const chunks: string[][] = [];
+  for (let i = 0; i < turnoIds.length; i += 30) {
+    chunks.push(turnoIds.slice(i, i + 30));
+  }
+  const results: Pedido[] = [];
+  for (const chunk of chunks) {
+    const q = query(collection(db, 'pedidos'), where('turnoId', 'in', chunk));
+    const snap = await getDocs(q);
+    snap.docs.forEach((d) => results.push({ id: d.id, ...d.data() } as Pedido));
+  }
+  return results;
+}
+
+/** Construye ResumenDiario vacío (sin datos) para una fecha. */
+function resumenVacio(fecha: string): ResumenDiario {
+  return {
+    fecha,
+    totalPedidos: 0,
+    totalVentas: 0,
+    ticketPromedio: 0,
+    pedidosPorEstado: {
+      pendiente: 0, en_preparacion: 0, listo: 0,
+      en_reparto: 0, entregado: 0, cancelado: 0,
+    },
+    ventasPorMetodoPago: {
+      efectivo: 0, tarjeta: 0, transferencia: 0, uber: 0, didi: 0,
+    },
+    totalEnvios: 0,
+    totalDescuentos: 0,
+  };
+}
+
+// ─── Servicio ──────────────────────────────────────────────────────────────────
 
 class ReportesService {
+
   /**
-   * Obtiene el resumen diario de ventas
+   * Resumen diario construido desde turno.resumen + pedidos del turno.
+   * No usa rango de fechas sobre pedidos → sin problema de índice.
    */
   async getResumenDiario(fecha: Date): Promise<ResumenDiario> {
-    const inicio = Timestamp.fromDate(startOfDay(fecha));
-    const fin = Timestamp.fromDate(endOfDay(fecha));
+    const fechaKey = fechaStr(fecha);
+    const turnos = await turnosService.getByFecha(fechaKey);
 
-    console.log('[Reportes] getResumenDiario — rango:', inicio.toDate().toISOString(), '→', fin.toDate().toISOString());
+    if (turnos.length === 0) {
+      return resumenVacio(fechaKey);
+    }
 
-    const pedidos = await pedidosService.getByRangoFechas(
-      inicio.toDate(),
-      fin.toDate()
-    );
+    // Agregar resúmenes de todos los turnos del día
+    const acum = resumenVacio(fechaKey);
+    for (const turno of turnos) {
+      const r = turno.resumen;
+      acum.totalPedidos      += r.totalPedidos ?? 0;
+      acum.totalVentas       += r.totalVentas  ?? 0;
+      acum.totalEnvios       += r.totalEnvios  ?? 0;
+      acum.totalDescuentos   += r.totalDescuentos ?? 0;
+      acum.ventasPorMetodoPago.efectivo      += r.efectivo      ?? 0;
+      acum.ventasPorMetodoPago.tarjeta       += r.tarjeta       ?? 0;
+      acum.ventasPorMetodoPago.transferencia += r.transferencia ?? 0;
+      acum.ventasPorMetodoPago.uber          += r.uber          ?? 0;
+      acum.ventasPorMetodoPago.didi          += r.didi          ?? 0;
+    }
 
-    console.log('[Reportes] pedidos encontrados:', pedidos.length, pedidos.map(p => ({ id: p.id, fechaCreacion: p.fechaCreacion?.toDate?.()?.toISOString(), cancelado: p.cancelado, total: p.totales?.total })));
+    acum.ticketPromedio = acum.totalPedidos > 0
+      ? Math.round((acum.totalVentas / acum.totalPedidos) * 100) / 100
+      : 0;
 
-    // Filtrar pedidos no cancelados
-    const pedidosValidos = pedidos.filter((p) => !p.cancelado);
-
-    // Calcular totales
-    const totalVentas = pedidosValidos.reduce(
-      (sum, p) => sum + (p.totales?.total || 0),
-      0
-    );
-    const totalEnvios = pedidosValidos.reduce(
-      (sum, p) => sum + (p.totales?.envio || 0),
-      0
-    );
-    const totalDescuentos = pedidosValidos.reduce(
-      (sum, p) => sum + (p.totales?.descuento || 0),
-      0
-    );
-
-    // Pedidos por estado
-    const pedidosPorEstado: Record<EstadoPedido, number> = {
-      pendiente: 0,
-      en_preparacion: 0,
-      listo: 0,
-      en_reparto: 0,
-      entregado: 0,
-      cancelado: 0,
-    };
-
+    // Estados: necesitamos los pedidos individuales
+    const turnoIds = turnos.map((t) => t.id);
+    const pedidos = await getPedidosDeTurnos(turnoIds);
     pedidos.forEach((p) => {
-      pedidosPorEstado[p.estado]++;
-    });
-
-    // Ventas por método de pago
-    const ventasPorMetodoPago: Record<MetodoPago, number> = {
-      efectivo: 0,
-      tarjeta: 0,
-      transferencia: 0,
-      uber: 0,
-      didi: 0,
-    };
-
-    pedidosValidos.forEach((p) => {
-      const metodo = p.pago?.metodo;
-      if (metodo && Object.prototype.hasOwnProperty.call(ventasPorMetodoPago, metodo)) {
-        ventasPorMetodoPago[metodo as MetodoPago] += p.totales?.total || 0;
+      if (acum.pedidosPorEstado[p.estado] !== undefined) {
+        acum.pedidosPorEstado[p.estado]++;
       }
     });
 
-    return {
-      fecha: format(fecha, 'yyyy-MM-dd'),
-      totalPedidos: pedidosValidos.length,
-      totalVentas,
-      ticketPromedio: pedidosValidos.length > 0 ? totalVentas / pedidosValidos.length : 0,
-      pedidosPorEstado,
-      ventasPorMetodoPago,
-      totalEnvios,
-      totalDescuentos,
-    };
+    return acum;
   }
 
   /**
-   * Obtiene las ventas por hora del día
+   * Ventas por hora del día, usando horaRecepcion de los pedidos del turno.
    */
   async getVentasPorHora(fecha: Date): Promise<VentasPorHora[]> {
-    const inicio = Timestamp.fromDate(startOfDay(fecha));
-    const fin = Timestamp.fromDate(endOfDay(fecha));
+    const fechaKey = fechaStr(fecha);
+    const turnos = await turnosService.getByFecha(fechaKey);
+    if (turnos.length === 0) return horasVacias();
 
-    const pedidos = await pedidosService.getByRangoFechas(
-      inicio.toDate(),
-      fin.toDate()
-    );
-
-    // Filtrar pedidos no cancelados
+    const pedidos = await getPedidosDeTurnos(turnos.map((t) => t.id));
     const pedidosValidos = pedidos.filter((p) => !p.cancelado);
 
-    // Agrupar por hora
-    const ventasPorHora: Record<string, { cantidad: number; total: number }> =
-      {};
-
-    // Inicializar todas las horas del día
+    const mapa: Record<string, { cantidad: number; total: number }> = {};
     for (let i = 0; i < 24; i++) {
-      const hora = i.toString().padStart(2, '0') + ':00';
-      ventasPorHora[hora] = { cantidad: 0, total: 0 };
+      mapa[i.toString().padStart(2, '0') + ':00'] = { cantidad: 0, total: 0 };
     }
 
     pedidosValidos.forEach((p) => {
       const ts = p.horaRecepcion ?? p.fechaCreacion;
-      if (!ts) return;
+      if (!ts?.toDate) return;
       const hora = ts.toDate().getHours().toString().padStart(2, '0') + ':00';
-
-      if (ventasPorHora[hora]) {
-        ventasPorHora[hora].cantidad++;
-        ventasPorHora[hora].total += p.totales?.total ?? 0;
+      if (mapa[hora]) {
+        mapa[hora].cantidad++;
+        mapa[hora].total += p.totales?.total ?? 0;
       }
     });
 
-    // Convertir a array y filtrar solo horas con ventas (o todas si queremos mostrar todas)
-    return Object.entries(ventasPorHora).map(([hora, data]) => ({
+    return Object.entries(mapa).map(([hora, d]) => ({
       hora,
-      cantidad: data.cantidad,
-      total: Math.round(data.total * 100) / 100,
+      cantidad: d.cantidad,
+      total: Math.round(d.total * 100) / 100,
     }));
   }
 
   /**
-   * Obtiene las ventas por canal
+   * Ventas por canal usando pedidos del turno.
    */
   async getVentasPorCanal(fecha: Date): Promise<VentasPorCanal[]> {
-    const inicio = Timestamp.fromDate(startOfDay(fecha));
-    const fin = Timestamp.fromDate(endOfDay(fecha));
+    const fechaKey = fechaStr(fecha);
+    const turnos = await turnosService.getByFecha(fechaKey);
+    if (turnos.length === 0) return canalesVacios();
 
-    const pedidos = await pedidosService.getByRangoFechas(
-      inicio.toDate(),
-      fin.toDate()
-    );
-
-    // Filtrar pedidos no cancelados
+    const pedidos = await getPedidosDeTurnos(turnos.map((t) => t.id));
     const pedidosValidos = pedidos.filter((p) => !p.cancelado);
 
-    // Agrupar por canal
-    const ventasPorCanal: Record<
-      CanalVenta,
-      { cantidad: number; total: number }
-    > = {
+    const mapa: Record<string, { cantidad: number; total: number }> = {
       whatsapp: { cantidad: 0, total: 0 },
       mostrador: { cantidad: 0, total: 0 },
       uber: { cantidad: 0, total: 0 },
@@ -228,353 +225,241 @@ class ReportesService {
       web: { cantidad: 0, total: 0 },
     };
 
+    let totalVentas = 0;
     pedidosValidos.forEach((p) => {
-      if (ventasPorCanal[p.canal]) {
-        ventasPorCanal[p.canal].cantidad++;
-        ventasPorCanal[p.canal].total += p.totales?.total ?? 0;
+      if (mapa[p.canal]) {
+        mapa[p.canal].cantidad++;
+        const t = p.totales?.total ?? 0;
+        mapa[p.canal].total += t;
+        totalVentas += t;
       }
     });
 
-    const totalVentas = pedidosValidos.reduce(
-      (sum, p) => sum + (p.totales?.total ?? 0),
-      0
-    );
-
-    return Object.entries(ventasPorCanal).map(([canal, data]) => ({
+    return Object.entries(mapa).map(([canal, d]) => ({
       canal: canal as CanalVenta,
-      cantidad: data.cantidad,
-      total: Math.round(data.total * 100) / 100,
-      porcentaje:
-        totalVentas > 0
-          ? Math.round((data.total / totalVentas) * 100 * 10) / 10
-          : 0,
+      cantidad: d.cantidad,
+      total: Math.round(d.total * 100) / 100,
+      porcentaje: totalVentas > 0
+        ? Math.round((d.total / totalVentas) * 1000) / 10
+        : 0,
     }));
   }
 
   /**
-   * Obtiene los productos más vendidos
+   * Productos más vendidos usando items de los pedidos del turno.
    */
-  async getProductosMasVendidos(
-    fecha: Date,
-    limite: number = 10
-  ): Promise<ProductoMasVendido[]> {
-    const inicio = Timestamp.fromDate(startOfDay(fecha));
-    const fin = Timestamp.fromDate(endOfDay(fecha));
+  async getProductosMasVendidos(fecha: Date, limite = 10): Promise<ProductoMasVendido[]> {
+    const fechaKey = fechaStr(fecha);
+    const turnos = await turnosService.getByFecha(fechaKey);
+    if (turnos.length === 0) return [];
 
-    const pedidos = await pedidosService.getByRangoFechas(
-      inicio.toDate(),
-      fin.toDate()
-    );
-
-    // Filtrar pedidos no cancelados
+    const pedidos = await getPedidosDeTurnos(turnos.map((t) => t.id));
     const pedidosValidos = pedidos.filter((p) => !p.cancelado);
 
-    // Obtener todos los items de todos los pedidos
-    const productosMap: Record<
-      string,
-      { nombre: string; cantidad: number; total: number }
-    > = {};
+    const mapa: Record<string, { nombre: string; cantidad: number; total: number }> = {};
 
     for (const pedido of pedidosValidos) {
-      const items = await pedidosService.getItems(pedido.id);
-
-      items.forEach((item) => {
-        if (!productosMap[item.productoId]) {
-          productosMap[item.productoId] = {
-            nombre: item.productoNombre,
-            cantidad: 0,
-            total: 0,
-          };
-        }
-
-        productosMap[item.productoId].cantidad += item.cantidad;
-        productosMap[item.productoId].total += item.subtotal;
-      });
+      if (!db) continue;
+      try {
+        const itemsSnap = await getDocs(
+          collection(db, 'pedidos', pedido.id, 'items')
+        );
+        itemsSnap.docs.forEach((d) => {
+          const item = d.data() as ItemPedido;
+          if (!mapa[item.productoId]) {
+            mapa[item.productoId] = { nombre: item.productoNombre, cantidad: 0, total: 0 };
+          }
+          mapa[item.productoId].cantidad += item.cantidad ?? 1;
+          mapa[item.productoId].total    += item.subtotal ?? 0;
+        });
+      } catch {
+        // continuar si un pedido no tiene items
+      }
     }
 
-    // Convertir a array y ordenar por cantidad
-    const productos = Object.entries(productosMap)
-      .map(([productoId, data]) => ({
+    return Object.entries(mapa)
+      .map(([productoId, d]) => ({
         productoId,
-        productoNombre: data.nombre,
-        cantidad: data.cantidad,
-        total: Math.round(data.total * 100) / 100,
+        productoNombre: d.nombre,
+        cantidad: d.cantidad,
+        total: Math.round(d.total * 100) / 100,
       }))
       .sort((a, b) => b.cantidad - a.cantidad)
       .slice(0, limite);
-
-    return productos;
   }
 
   /**
-   * Obtiene el desempeño de los repartidores
+   * Desempeño de repartidores usando pedidos entregados del turno.
    */
   async getDesempenoRepartidores(fecha: Date): Promise<DesempenoRepartidor[]> {
-    const inicio = Timestamp.fromDate(startOfDay(fecha));
-    const fin = Timestamp.fromDate(endOfDay(fecha));
+    const fechaKey = fechaStr(fecha);
+    const turnos = await turnosService.getByFecha(fechaKey);
+    if (turnos.length === 0) return [];
 
-    const pedidos = await pedidosService.getByRangoFechas(
-      inicio.toDate(),
-      fin.toDate()
-    );
-
-    // Filtrar solo pedidos entregados con repartidor
-    const pedidosEntregados = pedidos.filter(
+    const pedidos = await getPedidosDeTurnos(turnos.map((t) => t.id));
+    const entregados = pedidos.filter(
       (p) => p.estado === 'entregado' && p.reparto && !p.cancelado
     );
 
-    // Agrupar por repartidor
-    const repartidoresMap: Record<
-      string,
-      {
-        nombre: string;
-        pedidos: number;
-        total: number;
-        comisiones: number;
-        tiempos: number[];
-      }
-    > = {};
+    const mapa: Record<string, {
+      nombre: string; pedidos: number; total: number;
+      comisiones: number; tiempos: number[];
+    }> = {};
 
-    pedidosEntregados.forEach((p) => {
+    entregados.forEach((p) => {
       if (!p.reparto) return;
-
-      const repartidorId = p.reparto.repartidorId;
-
-      if (!repartidoresMap[repartidorId]) {
-        repartidoresMap[repartidorId] = {
-          nombre: p.reparto.repartidorNombre,
-          pedidos: 0,
-          total: 0,
-          comisiones: 0,
-          tiempos: [],
-        };
+      const id = p.reparto.repartidorId;
+      if (!mapa[id]) {
+        mapa[id] = { nombre: p.reparto.repartidorNombre, pedidos: 0, total: 0, comisiones: 0, tiempos: [] };
       }
-
-      repartidoresMap[repartidorId].pedidos++;
-      repartidoresMap[repartidorId].total += p.totales?.total ?? 0;
-      repartidoresMap[repartidorId].comisiones += p.reparto.comisionRepartidor ?? 0;
-
-      // Calcular tiempo de entrega si existen los timestamps
+      mapa[id].pedidos++;
+      mapa[id].total      += p.totales?.total ?? 0;
+      mapa[id].comisiones += p.reparto.comisionRepartidor ?? 0;
       if (p.horaListo && p.horaEntrega) {
-        const tiempo =
-          (p.horaEntrega.toMillis() - p.horaListo.toMillis()) / 1000 / 60;
-        repartidoresMap[repartidorId].tiempos.push(tiempo);
+        mapa[id].tiempos.push(
+          (p.horaEntrega.toMillis() - p.horaListo.toMillis()) / 60000
+        );
       }
     });
 
-    // Convertir a array
-    return Object.entries(repartidoresMap)
-      .map(([repartidorId, data]) => ({
-        repartidorId,
-        repartidorNombre: data.nombre,
-        pedidosEntregados: data.pedidos,
-        totalEntregado: Math.round(data.total * 100) / 100,
-        comisionesGanadas: Math.round(data.comisiones * 100) / 100,
-        tiempoPromedioEntrega:
-          data.tiempos.length > 0
-            ? Math.round(
-                data.tiempos.reduce((sum, t) => sum + t, 0) / data.tiempos.length
-              )
-            : 0,
-      }))
-      .sort((a, b) => b.pedidosEntregados - a.pedidosEntregados);
+    return Object.entries(mapa).map(([repartidorId, d]) => ({
+      repartidorId,
+      repartidorNombre: d.nombre,
+      pedidosEntregados: d.pedidos,
+      totalEntregado: Math.round(d.total * 100) / 100,
+      comisionesGanadas: Math.round(d.comisiones * 100) / 100,
+      tiempoPromedioEntrega: d.tiempos.length > 0
+        ? Math.round(d.tiempos.reduce((s, t) => s + t, 0) / d.tiempos.length)
+        : 0,
+    })).sort((a, b) => b.pedidosEntregados - a.pedidosEntregados);
   }
 
-  /**
-   * Obtiene la comparativa con el día anterior
-   */
-  async getComparativaConDiaAnterior(
-    fecha: Date
-  ): Promise<ComparativaConDiaAnterior> {
-    const hoy = await this.getResumenDiario(fecha);
-    const ayer = await this.getResumenDiario(subDays(fecha, 1));
+  async getComparativaConDiaAnterior(fecha: Date): Promise<ComparativaConDiaAnterior> {
+    const [hoy, ayer] = await Promise.all([
+      this.getResumenDiario(fecha),
+      this.getResumenDiario(subDays(fecha, 1)),
+    ]);
 
-    const variacionPedidos =
-      ayer.totalPedidos > 0
-        ? ((hoy.totalPedidos - ayer.totalPedidos) / ayer.totalPedidos) * 100
-        : 0;
-
-    const variacionVentas =
-      ayer.totalVentas > 0
-        ? ((hoy.totalVentas - ayer.totalVentas) / ayer.totalVentas) * 100
-        : 0;
-
-    const variacionTicketPromedio =
-      ayer.ticketPromedio > 0
-        ? ((hoy.ticketPromedio - ayer.ticketPromedio) / ayer.ticketPromedio) *
-          100
-        : 0;
+    const pct = (a: number, b: number) =>
+      b > 0 ? Math.round(((a - b) / b) * 1000) / 10 : 0;
 
     return {
       hoy,
       ayer,
-      variacionPedidos: Math.round(variacionPedidos * 10) / 10,
-      variacionVentas: Math.round(variacionVentas * 10) / 10,
-      variacionTicketPromedio: Math.round(variacionTicketPromedio * 10) / 10,
+      variacionPedidos:       pct(hoy.totalPedidos,    ayer.totalPedidos),
+      variacionVentas:        pct(hoy.totalVentas,     ayer.totalVentas),
+      variacionTicketPromedio: pct(hoy.ticketPromedio, ayer.ticketPromedio),
     };
   }
 
-  /**
-   * Obtiene el reporte completo del día
-   */
   async getReporteFull(fecha: Date): Promise<ReporteFull> {
-    const [
-      resumen,
-      ventasPorHora,
-      ventasPorCanal,
-      productosMasVendidos,
-      desempenoRepartidores,
-    ] = await Promise.all([
-      this.getResumenDiario(fecha),
-      this.getVentasPorHora(fecha),
-      this.getVentasPorCanal(fecha),
-      this.getProductosMasVendidos(fecha, 10),
-      this.getDesempenoRepartidores(fecha),
-    ]);
-
-    return {
-      resumen,
-      ventasPorHora,
-      ventasPorCanal,
-      productosMasVendidos,
-      desempenoRepartidores,
-    };
+    const [resumen, ventasPorHora, ventasPorCanal, productosMasVendidos, desempenoRepartidores] =
+      await Promise.all([
+        this.getResumenDiario(fecha),
+        this.getVentasPorHora(fecha),
+        this.getVentasPorCanal(fecha),
+        this.getProductosMasVendidos(fecha, 10),
+        this.getDesempenoRepartidores(fecha),
+      ]);
+    return { resumen, ventasPorHora, ventasPorCanal, productosMasVendidos, desempenoRepartidores };
   }
 
-  /**
-   * Obtiene el reporte de un rango de fechas
-   */
-  async getReportePorRango(
-    fechaInicio: Date,
-    fechaFin: Date
-  ): Promise<{
-    resumen: {
-      totalPedidos: number;
-      totalVentas: number;
-      ticketPromedio: number;
-    };
+  async getReportePorRango(fechaInicio: Date, fechaFin: Date): Promise<{
+    resumen: { totalPedidos: number; totalVentas: number; ticketPromedio: number };
     ventasPorDia: { fecha: string; total: number; pedidos: number }[];
     ventasPorCanal: VentasPorCanal[];
     productosMasVendidos: ProductoMasVendido[];
   }> {
-    const inicio = Timestamp.fromDate(startOfDay(fechaInicio));
-    const fin = Timestamp.fromDate(endOfDay(fechaFin));
+    const inicio = fechaStr(fechaInicio);
+    const fin    = fechaStr(fechaFin);
 
-    const pedidos = await pedidosService.getByRangoFechas(
-      inicio.toDate(),
-      fin.toDate()
-    );
-
+    const turnos = await turnosService.getTurnosPorRango(inicio, fin);
+    const turnoIds = turnos.map((t) => t.id);
+    const pedidos = await getPedidosDeTurnos(turnoIds);
     const pedidosValidos = pedidos.filter((p) => !p.cancelado);
 
-    const totalVentas = pedidosValidos.reduce(
-      (sum, p) => sum + (p.totales?.total ?? 0),
-      0
-    );
+    // KPIs totales desde resúmenes de turno
+    let totalPedidos = 0;
+    let totalVentas  = 0;
+    const ventasPorDiaMap: Record<string, { total: number; pedidos: number }> = {};
 
-    // Ventas por día
-    const ventasPorDiaMap: Record<string, { total: number; pedidos: number }> =
-      {};
-
-    pedidosValidos.forEach((p) => {
-      const ts = p.horaRecepcion ?? p.fechaCreacion;
-      if (!ts) return;
-      const fecha = format(ts.toDate(), 'yyyy-MM-dd');
-      if (!ventasPorDiaMap[fecha]) {
-        ventasPorDiaMap[fecha] = { total: 0, pedidos: 0 };
-      }
-      ventasPorDiaMap[fecha].total += p.totales?.total ?? 0;
-      ventasPorDiaMap[fecha].pedidos++;
-    });
-
-    const ventasPorDia = Object.entries(ventasPorDiaMap).map(
-      ([fecha, data]) => ({
-        fecha,
-        total: Math.round(data.total * 100) / 100,
-        pedidos: data.pedidos,
-      })
-    );
-
-    // Ventas por canal (todo el rango)
-    const ventasPorCanalMap: Record<
-      CanalVenta,
-      { cantidad: number; total: number }
-    > = {
-      whatsapp: { cantidad: 0, total: 0 },
-      mostrador: { cantidad: 0, total: 0 },
-      uber: { cantidad: 0, total: 0 },
-      didi: { cantidad: 0, total: 0 },
-      llamada: { cantidad: 0, total: 0 },
-      web: { cantidad: 0, total: 0 },
-    };
-
-    pedidosValidos.forEach((p) => {
-      if (ventasPorCanalMap[p.canal]) {
-        ventasPorCanalMap[p.canal].cantidad++;
-        ventasPorCanalMap[p.canal].total += p.totales?.total ?? 0;
-      }
-    });
-
-    const ventasPorCanal = Object.entries(ventasPorCanalMap).map(
-      ([canal, data]) => ({
-        canal: canal as CanalVenta,
-        cantidad: data.cantidad,
-        total: Math.round(data.total * 100) / 100,
-        porcentaje:
-          totalVentas > 0
-            ? Math.round((data.total / totalVentas) * 100 * 10) / 10
-            : 0,
-      })
-    );
-
-    // Productos más vendidos (todo el rango)
-    const productosMap: Record<
-      string,
-      { nombre: string; cantidad: number; total: number }
-    > = {};
-
-    for (const pedido of pedidosValidos) {
-      const items = await pedidosService.getItems(pedido.id);
-
-      items.forEach((item) => {
-        if (!productosMap[item.productoId]) {
-          productosMap[item.productoId] = {
-            nombre: item.productoNombre,
-            cantidad: 0,
-            total: 0,
-          };
-        }
-
-        productosMap[item.productoId].cantidad += item.cantidad;
-        productosMap[item.productoId].total += item.subtotal;
-      });
+    for (const turno of turnos) {
+      const r = turno.resumen;
+      totalPedidos += r.totalPedidos ?? 0;
+      totalVentas  += r.totalVentas  ?? 0;
+      ventasPorDiaMap[turno.fecha] = ventasPorDiaMap[turno.fecha] ?? { total: 0, pedidos: 0 };
+      ventasPorDiaMap[turno.fecha].total   += r.totalVentas  ?? 0;
+      ventasPorDiaMap[turno.fecha].pedidos += r.totalPedidos ?? 0;
     }
 
-    const productosMasVendidos = Object.entries(productosMap)
-      .map(([productoId, data]) => ({
-        productoId,
-        productoNombre: data.nombre,
-        cantidad: data.cantidad,
-        total: Math.round(data.total * 100) / 100,
-      }))
-      .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 10);
+    // Canales desde pedidos individuales
+    const canalMapa: Record<string, { cantidad: number; total: number }> = {
+      whatsapp: { cantidad: 0, total: 0 }, mostrador: { cantidad: 0, total: 0 },
+      uber: { cantidad: 0, total: 0 },     didi: { cantidad: 0, total: 0 },
+      llamada: { cantidad: 0, total: 0 },  web: { cantidad: 0, total: 0 },
+    };
+    pedidosValidos.forEach((p) => {
+      if (canalMapa[p.canal]) {
+        canalMapa[p.canal].cantidad++;
+        canalMapa[p.canal].total += p.totales?.total ?? 0;
+      }
+    });
+    const ventasPorCanal: VentasPorCanal[] = Object.entries(canalMapa).map(([canal, d]) => ({
+      canal: canal as CanalVenta,
+      cantidad: d.cantidad,
+      total: Math.round(d.total * 100) / 100,
+      porcentaje: totalVentas > 0 ? Math.round((d.total / totalVentas) * 1000) / 10 : 0,
+    }));
+
+    // Productos
+    const productoMapa: Record<string, { nombre: string; cantidad: number; total: number }> = {};
+    for (const pedido of pedidosValidos) {
+      if (!db) continue;
+      try {
+        const snap = await getDocs(collection(db, 'pedidos', pedido.id, 'items'));
+        snap.docs.forEach((d) => {
+          const item = d.data() as ItemPedido;
+          if (!productoMapa[item.productoId]) {
+            productoMapa[item.productoId] = { nombre: item.productoNombre, cantidad: 0, total: 0 };
+          }
+          productoMapa[item.productoId].cantidad += item.cantidad ?? 1;
+          productoMapa[item.productoId].total    += item.subtotal ?? 0;
+        });
+      } catch { /* continuar */ }
+    }
 
     return {
       resumen: {
-        totalPedidos: pedidosValidos.length,
+        totalPedidos,
         totalVentas: Math.round(totalVentas * 100) / 100,
-        ticketPromedio:
-          pedidosValidos.length > 0
-            ? Math.round((totalVentas / pedidosValidos.length) * 100) / 100
-            : 0,
+        ticketPromedio: totalPedidos > 0 ? Math.round((totalVentas / totalPedidos) * 100) / 100 : 0,
       },
-      ventasPorDia,
+      ventasPorDia: Object.entries(ventasPorDiaMap)
+        .map(([fecha, d]) => ({ fecha, ...d, total: Math.round(d.total * 100) / 100 }))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha)),
       ventasPorCanal,
-      productosMasVendidos,
+      productosMasVendidos: Object.entries(productoMapa)
+        .map(([productoId, d]) => ({ productoId, productoNombre: d.nombre, cantidad: d.cantidad, total: Math.round(d.total * 100) / 100 }))
+        .sort((a, b) => b.cantidad - a.cantidad)
+        .slice(0, 10),
     };
   }
 }
 
-// Exportar instancia única (Singleton)
+// ─── Constantes internas ───────────────────────────────────────────────────────
+
+function horasVacias(): VentasPorHora[] {
+  return Array.from({ length: 24 }, (_, i) => ({
+    hora: i.toString().padStart(2, '0') + ':00',
+    cantidad: 0,
+    total: 0,
+  }));
+}
+
+function canalesVacios(): VentasPorCanal[] {
+  return (['whatsapp', 'mostrador', 'uber', 'didi', 'llamada', 'web'] as CanalVenta[]).map(
+    (canal) => ({ canal, cantidad: 0, total: 0, porcentaje: 0 })
+  );
+}
+
 export const reportesService = new ReportesService();
