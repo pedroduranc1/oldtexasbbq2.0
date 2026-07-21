@@ -131,11 +131,18 @@ export default function ReportesPage() {
       </div>
 
       {/* Resumen Diario */}
-      <ResumenDiario
-        resumen={resumenDiario!}
-        comparativa={comparativa}
-        isLoading={isLoading}
-      />
+      {resumenDiario && (
+        <ResumenDiario
+          resumen={resumenDiario}
+          comparativa={comparativa}
+          isLoading={isLoading}
+        />
+      )}
+      {!resumenDiario && !isLoading && (
+        <div className="rounded-lg border border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
+          Sin pedidos registrados para este día.
+        </div>
+      )}
 
       {/* Gráficas */}
       <div className="grid gap-6 lg:grid-cols-2">

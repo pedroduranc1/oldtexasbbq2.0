@@ -129,12 +129,14 @@ class ReportesService {
       efectivo: 0,
       tarjeta: 0,
       transferencia: 0,
-      app: 0,
+      uber: 0,
+      didi: 0,
     };
 
     pedidosValidos.forEach((p) => {
-      if (p.pago?.metodo && ventasPorMetodoPago.hasOwnProperty(p.pago.metodo)) {
-        ventasPorMetodoPago[p.pago.metodo] += p.totales.total || 0;
+      const metodo = p.pago?.metodo;
+      if (metodo && Object.prototype.hasOwnProperty.call(ventasPorMetodoPago, metodo)) {
+        ventasPorMetodoPago[metodo as MetodoPago] += p.totales?.total || 0;
       }
     });
 
@@ -176,12 +178,13 @@ class ReportesService {
     }
 
     pedidosValidos.forEach((p) => {
-      const fecha = p.horaRecepcion.toDate();
-      const hora = fecha.getHours().toString().padStart(2, '0') + ':00';
+      const ts = p.horaRecepcion ?? p.fechaCreacion;
+      if (!ts) return;
+      const hora = ts.toDate().getHours().toString().padStart(2, '0') + ':00';
 
       if (ventasPorHora[hora]) {
         ventasPorHora[hora].cantidad++;
-        ventasPorHora[hora].total += p.totales.total;
+        ventasPorHora[hora].total += p.totales?.total ?? 0;
       }
     });
 
@@ -222,12 +225,14 @@ class ReportesService {
     };
 
     pedidosValidos.forEach((p) => {
-      ventasPorCanal[p.canal].cantidad++;
-      ventasPorCanal[p.canal].total += p.totales.total;
+      if (ventasPorCanal[p.canal]) {
+        ventasPorCanal[p.canal].cantidad++;
+        ventasPorCanal[p.canal].total += p.totales?.total ?? 0;
+      }
     });
 
     const totalVentas = pedidosValidos.reduce(
-      (sum, p) => sum + p.totales.total,
+      (sum, p) => sum + (p.totales?.total ?? 0),
       0
     );
 
@@ -342,8 +347,8 @@ class ReportesService {
       }
 
       repartidoresMap[repartidorId].pedidos++;
-      repartidoresMap[repartidorId].total += p.totales.total;
-      repartidoresMap[repartidorId].comisiones += p.reparto.comisionRepartidor;
+      repartidoresMap[repartidorId].total += p.totales?.total ?? 0;
+      repartidoresMap[repartidorId].comisiones += p.reparto.comisionRepartidor ?? 0;
 
       // Calcular tiempo de entrega si existen los timestamps
       if (p.horaListo && p.horaEntrega) {
@@ -459,7 +464,7 @@ class ReportesService {
     const pedidosValidos = pedidos.filter((p) => !p.cancelado);
 
     const totalVentas = pedidosValidos.reduce(
-      (sum, p) => sum + p.totales.total,
+      (sum, p) => sum + (p.totales?.total ?? 0),
       0
     );
 
@@ -468,11 +473,13 @@ class ReportesService {
       {};
 
     pedidosValidos.forEach((p) => {
-      const fecha = format(p.horaRecepcion.toDate(), 'yyyy-MM-dd');
+      const ts = p.horaRecepcion ?? p.fechaCreacion;
+      if (!ts) return;
+      const fecha = format(ts.toDate(), 'yyyy-MM-dd');
       if (!ventasPorDiaMap[fecha]) {
         ventasPorDiaMap[fecha] = { total: 0, pedidos: 0 };
       }
-      ventasPorDiaMap[fecha].total += p.totales.total;
+      ventasPorDiaMap[fecha].total += p.totales?.total ?? 0;
       ventasPorDiaMap[fecha].pedidos++;
     });
 
@@ -498,8 +505,10 @@ class ReportesService {
     };
 
     pedidosValidos.forEach((p) => {
-      ventasPorCanalMap[p.canal].cantidad++;
-      ventasPorCanalMap[p.canal].total += p.totales.total;
+      if (ventasPorCanalMap[p.canal]) {
+        ventasPorCanalMap[p.canal].cantidad++;
+        ventasPorCanalMap[p.canal].total += p.totales?.total ?? 0;
+      }
     });
 
     const ventasPorCanal = Object.entries(ventasPorCanalMap).map(
