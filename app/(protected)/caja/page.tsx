@@ -45,6 +45,14 @@ const RUTAS_CAJA = [
     requiereTurno: false,
     requiereOperar: false,
   },
+  {
+    href: '/caja/anticipos',
+    titulo: 'Anticipos',
+    descripcion: 'Pedidos especiales y pagos adelantados de clientes',
+    icon: Eye,
+    requiereTurno: false,
+    requiereOperar: false,
+  },
 ] as const;
 
 export default function CajaPage() {

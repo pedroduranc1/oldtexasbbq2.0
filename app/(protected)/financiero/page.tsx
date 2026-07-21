@@ -30,9 +30,12 @@ import {
   DollarSign,
   Users,
   Lock,
+  Wallet,
+  ChevronRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 import type { Turno } from '@/lib/types/firestore';
 
 // ── Colores ──────────────────────────────────────────────────────────────────
@@ -242,11 +245,25 @@ export default function FinancieroPage() {
     <div className="container mx-auto p-6 space-y-8">
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Financiero</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Analíticas del módulo de Caja · {kpis.totalTurnos} turnos cerrados
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Financiero</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Analíticas del módulo de Caja · {kpis.totalTurnos} turnos cerrados
+          </p>
+        </div>
+        <Link href="/financiero/flujo">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-dashed w-full sm:w-auto">
+            <CardContent className="flex items-center gap-3 py-3 px-4">
+              <Wallet className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Flujo semanal</p>
+                <p className="text-xs text-muted-foreground">Lunes a domingo</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* KPIs */}

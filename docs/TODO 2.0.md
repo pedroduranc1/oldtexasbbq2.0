@@ -328,15 +328,42 @@
 - [x] **Problema 7 — Mermas de producción no capturadas en tiempo real**
   - Solución: botón "Registrar merma" agregado directamente en `/cocina`. Abre `RegistroMovimientoInventario` con modo salida/merma sin salir de la pantalla de cocina.
 
-### 🔴 Pendientes — requieren módulos nuevos
+### ✅ Resueltos en sprints recientes
 
-- [ ] **Problema 2 — Cancelaciones no reflejadas correctamente en corte**
-  - Gap: cuando se cancela un pedido ya cobrado, no se genera un egreso de corrección en `MovimientosCaja` ni queda evidencia del motivo en el corte.
-  - Solución propuesta: modificar `pedidosService.cancelar()` para crear automáticamente un movimiento de caja con concepto `Cancelación de pedido`, monto negativo y referencia al `pedidoId`. Mostrar en `CorteCaja` una sección de cancelaciones del periodo.
+- [x] **Problema 2 — Cancelaciones no reflejadas correctamente en corte**
+  - Solución: `pedidosService.cancelar()` genera automáticamente un `MovimientoCaja` tipo egreso con concepto `Cancelación de pedido`, monto del total y referencia al `numeroPedido`. Solo aplica a pedidos pagados en efectivo (tarjeta/transferencia no mueve la caja física).
 
-- [ ] **Problema 8 — Recepción de proveedores manual y tardía**
-  - Gap: no existe flujo guiado de recepción de mercancía. El encargado actualiza el stock manualmente ingrediente por ingrediente.
-  - Solución propuesta: pantalla de `RecepciónProveedor` que muestre los ingredientes esperados del proveedor, permita confirmar cantidades recibidas en un solo formulario y ejecute todos los `registrarEntrada()` en batch con un clic.
+- [x] **Problema 8 — Recepción de proveedores manual y tardía**
+  - Solución: componente `RecepcionProveedor.tsx` — selección de proveedor → lista sus ingredientes con stock actual → captura cantidades recibidas → `registrarEntrada()` en batch. Accesible desde `/inventario` (botón "Recibir mercancía") y desde `/inventario/proveedores`.
+
+---
+
+---
+
+## Módulos adicionales — Flujo de efectivo y Anticipos (derivados de bitácora cliente)
+
+> Implementados tras análisis de la bitácora operativa del cliente (semana del 13-19 julio 2026).
+
+### Tipos de datos (firestore.ts)
+- [x] `SubmetodoTarjeta` — distingue `clip_link | clip_terminal | otro`
+- [x] `EstadoAnticipo` — ciclo de vida: `recibido → aplicado → saldado | cancelado`
+- [x] `Anticipo` — interfaz completa con `movimientoCajaId`, `submetodoTarjeta`, `turnoId`, `pedidoId`
+- [x] `FlujoSemanal` — periodo lunes-domingo con `saldoInicial`, `saldoFinal`, `estado`
+
+### Servicios
+- [x] `lib/services/anticipos.service.ts` — CRUD + ciclo de vida; crea `MovimientoCaja` automático al recibir anticipo en efectivo; genera egreso de devolución al cancelar; comisión Clip 3.6%+IVA
+- [x] `lib/services/flujoEfectivo.service.ts` — CRUD de `FlujoSemanal`; `calcularResumenFlujo()` agrega turnos + MovimientosCaja + anticipos; saldo teórico efectivo; nota Clip D+1; desglose Uber/Didi
+
+### Rutas y UI
+- [x] `app/(protected)/caja/anticipos/page.tsx` — lista de anticipos con filtro por estado, KPIs, formulario de creación (con aviso Clip neto), botones de ciclo de vida (Aplicar/Saldar/Cancelar)
+- [x] `app/(protected)/financiero/flujo/page.tsx` — navegación semanal (lun-dom), crear semana con saldo inicial, resumen de ingresos por tipo, tabla diaria, cerrar semana con saldo real contado
+- [x] Acceso rápido a Anticipos desde `/caja` (nueva tarjeta en RUTAS_CAJA)
+- [x] Acceso rápido a Flujo semanal desde `/financiero` (card con enlace)
+
+### Pendientes
+- [ ] Vincular un anticipo directamente desde un pedido en `/pedidos`
+- [ ] Tabla de anticipos por entrega estimada (vista calendario)
+- [ ] Exportar PDF del flujo semanal
 
 ---
 

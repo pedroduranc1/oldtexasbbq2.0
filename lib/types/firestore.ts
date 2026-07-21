@@ -29,12 +29,26 @@ export type EstadoPedido =
   | 'entregado'
   | 'cancelado';
 
+/**
+ * Método de cobro real al cliente.
+ * 'efectivo' y 'tarjeta' son los únicos métodos directos.
+ * 'transferencia' aplica cuando el pago llega por depósito bancario
+ * (proveedores como Clip, Uber, Didi liquidan por esta vía).
+ * 'uber' y 'didi' se conservan por compatibilidad con datos históricos;
+ * contablemente esas ventas llegan como transferencia en el flujo semanal.
+ */
 export type MetodoPago =
   | 'efectivo'
   | 'tarjeta'
   | 'transferencia'
-  | 'uber'
-  | 'didi';
+  | 'uber'    // legado — depósito semanal por transferencia
+  | 'didi';   // legado — depósito semanal por transferencia
+
+/**
+ * Forma en que el dinero de tarjeta llega a la cuenta.
+ * Clip deposita D+1 descontando 3.6% + IVA.
+ */
+export type SubmetodoTarjeta = 'clip_link' | 'clip_terminal' | 'otro';
 
 export type EstadoReparto =
   | 'asignado'
@@ -758,3 +772,80 @@ export const LABELS_TIPO_MOVIMIENTO: Record<TipoMovimientoCaja, string> = {
   ingreso: 'Ingreso',
   egreso: 'Egreso',
 };
+
+// ============================================================================
+// COLECCIÓN: Anticipos
+// ============================================================================
+
+/**
+ * Estado del ciclo de vida de un anticipo.
+ * recibido  → el dinero entró pero el pedido aún no se ha preparado/entregado
+ * aplicado  → el pedido se completó y el anticipo se descontó del saldo final
+ * saldado   → el cliente cubrió el resto y el ciclo está cerrado
+ * cancelado → el pedido no se realizó; el anticipo se devolvió o se registró como egreso
+ */
+export type EstadoAnticipo = 'recibido' | 'aplicado' | 'saldado' | 'cancelado';
+
+export interface Anticipo {
+  id: string;
+  /** Nombre o referencia del cliente */
+  clienteNombre: string;
+  clienteTelefono?: string;
+  /** Descripción del pedido o evento para el que se anticipa */
+  descripcion: string;
+  /** Monto del anticipo recibido */
+  montoAnticipo: number;
+  /** Total estimado del pedido completo */
+  totalEstimado?: number;
+  /** Saldo pendiente = totalEstimado - montoAnticipo (calculado en lectura) */
+  metodoPago: MetodoPago;
+  /** Solo cuando metodoPago === 'tarjeta' */
+  submetodoTarjeta?: SubmetodoTarjeta;
+  estado: EstadoAnticipo;
+  /** Fecha en que se recibió el anticipo */
+  fechaRecepcion: Timestamp;
+  /** Fecha comprometida de entrega del pedido */
+  fechaEntregaEstimada?: Timestamp;
+  /** Fecha real de aplicación/saldo */
+  fechaAplicacion?: Timestamp;
+  /** Referencia al turno en que se recibió el anticipo */
+  turnoId?: string;
+  /** Referencia al pedido final, si se creó en el sistema */
+  pedidoId?: string;
+  /** MovimientoCaja generado al recibir el anticipo */
+  movimientoCajaId?: string;
+  notas?: string;
+  usuarioId: string;
+  usuarioNombre: string;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
+
+export type NuevoAnticipo = Omit<Anticipo, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
+
+// ============================================================================
+// COLECCIÓN: FlujoEfectivo (periodos semanales)
+// ============================================================================
+
+/**
+ * Registro del flujo de efectivo de una semana (lunes–domingo).
+ * Se crea manualmente al inicio de cada semana con el saldo inicial de caja.
+ * Los movimientos se calculan dinámicamente desde turnos + MovimientosCaja.
+ */
+export interface FlujoSemanal {
+  id: string;
+  /** Lunes de la semana — "YYYY-MM-DD" */
+  semanaInicio: string;
+  /** Domingo de la semana — "YYYY-MM-DD" */
+  semanaFin: string;
+  /** Efectivo físico contado en caja el lunes antes de abrir */
+  saldoInicial: number;
+  /** Monto cerrado/archivado — se llena al cerrar el periodo */
+  saldoFinal?: number;
+  estado: 'abierto' | 'cerrado';
+  notas?: string;
+  usuarioId: string;
+  usuarioNombre: string;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
