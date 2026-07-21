@@ -9,21 +9,19 @@ import { toast } from 'sonner';
 
 import { useReportes, useExportarReporte } from '@/lib/hooks/useReportes';
 import { ResumenDiario } from '@/components/reportes/ResumenDiario';
-import { GraficaVentasPorHora } from '@/components/reportes/GraficaVentasPorHora';
-import { GraficaVentasPorCanal } from '@/components/reportes/GraficaVentasPorCanal';
-import { TablaProductosMasVendidos } from '@/components/reportes/TablaProductosMasVendidos';
-import { TablaDesempenoRepartidores } from '@/components/reportes/TablaDesempenoRepartidores';
+import { GraficaMetodosPago } from '@/components/reportes/GraficaMetodosPago';
+import { GraficaComparativaTurnos } from '@/components/reportes/GraficaComparativaTurnos';
+import { TablaProductosDia } from '@/components/reportes/TablaProductosDia';
+import { ResumenCajaTurnos } from '@/components/reportes/ResumenCajaTurnos';
 
 export default function ReportesPage() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
 
   const {
     resumenDiario,
-    ventasPorHora,
-    ventasPorCanal,
-    productosMasVendidos,
-    desempenoRepartidores,
     comparativa,
+    turnosDia,
+    productosCatalogo,
     isLoading,
     error,
     refetchResumen,
@@ -98,7 +96,7 @@ export default function ReportesPage() {
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Exportar a Excel
+            Exportar
           </button>
         </div>
       </div>
@@ -121,7 +119,7 @@ export default function ReportesPage() {
         </div>
       )}
 
-      {/* Resumen Diario */}
+      {/* Resumen Diario — KPIs principales */}
       {resumenDiario && (
         <ResumenDiario
           resumen={resumenDiario}
@@ -135,16 +133,33 @@ export default function ReportesPage() {
         </div>
       )}
 
-      {/* Gráficas */}
+      {/* Fila 1: Métodos de pago + Comparativa turnos */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <GraficaVentasPorHora datos={ventasPorHora || []} isLoading={isLoading} />
-        <GraficaVentasPorCanal datos={ventasPorCanal || []} isLoading={isLoading} />
+        {resumenDiario ? (
+          <GraficaMetodosPago resumen={resumenDiario} isLoading={isLoading} />
+        ) : (
+          <GraficaMetodosPago
+            resumen={{
+              fecha: format(fechaSeleccionada, 'yyyy-MM-dd'),
+              totalPedidos: 0, totalVentas: 0, ticketPromedio: 0,
+              pedidosPorEstado: { pendiente:0, en_preparacion:0, listo:0, en_reparto:0, entregado:0, cancelado:0 },
+              ventasPorMetodoPago: { efectivo:0, tarjeta:0, transferencia:0, uber:0, didi:0 },
+              totalEnvios: 0, totalDescuentos: 0,
+            }}
+            isLoading={isLoading}
+          />
+        )}
+        <GraficaComparativaTurnos turnos={turnosDia} isLoading={isLoading} />
       </div>
 
-      {/* Tablas */}
+      {/* Fila 2: Productos del día + Resumen de caja */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <TablaProductosMasVendidos productos={productosMasVendidos || []} isLoading={isLoading} />
-        <TablaDesempenoRepartidores repartidores={desempenoRepartidores || []} isLoading={isLoading} />
+        <TablaProductosDia
+          productos={productosCatalogo}
+          fecha={fechaSeleccionada}
+          isLoading={isLoading}
+        />
+        <ResumenCajaTurnos turnos={turnosDia} isLoading={isLoading} />
       </div>
     </div>
   );

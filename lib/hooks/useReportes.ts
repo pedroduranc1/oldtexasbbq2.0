@@ -9,7 +9,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { reportesService } from '@/lib/services/reportes.service';
-import { startOfDay } from 'date-fns';
+import { turnosService } from '@/lib/services/turnos.service';
+import { productosService } from '@/lib/services/productos.service';
+import { startOfDay, format } from 'date-fns';
 
 // ============================================================================
 // HOOK PRINCIPAL
@@ -119,13 +121,35 @@ export function useReportes(fecha: Date = new Date()) {
     enabled: false, // Solo se ejecuta manualmente cuando se necesite
   });
 
+  // Turnos del día (para gráficas comparativas y resumen caja)
+  const {
+    data: turnosDia,
+    isLoading: isLoadingTurnos,
+  } = useQuery({
+    queryKey: ['reportes', 'turnos-dia', fechaNormalizada.toISOString()],
+    queryFn: () => turnosService.getByFecha(format(fechaNormalizada, 'yyyy-MM-dd')),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Productos del catálogo (para ranking por cantidadVendidaPorDia)
+  const {
+    data: productosCatalogo,
+    isLoading: isLoadingCatalogo,
+  } = useQuery({
+    queryKey: ['reportes', 'productos-catalogo'],
+    queryFn: () => productosService.getAll(),
+    staleTime: 1000 * 60 * 10, // 10 min — el catálogo no cambia tan seguido
+  });
+
   const isLoading =
     isLoadingResumen ||
     isLoadingVentasHora ||
     isLoadingVentasCanal ||
     isLoadingProductos ||
     isLoadingRepartidores ||
-    isLoadingComparativa;
+    isLoadingComparativa ||
+    isLoadingTurnos ||
+    isLoadingCatalogo;
 
   const error =
     errorResumen ||
@@ -144,6 +168,8 @@ export function useReportes(fecha: Date = new Date()) {
     desempenoRepartidores,
     comparativa,
     reporteFull,
+    turnosDia: turnosDia ?? [],
+    productosCatalogo: productosCatalogo ?? [],
 
     // Estados
     isLoading,
@@ -154,6 +180,8 @@ export function useReportes(fecha: Date = new Date()) {
     isLoadingRepartidores,
     isLoadingComparativa,
     isLoadingReporteFull,
+    isLoadingTurnos,
+    isLoadingCatalogo,
 
     // Errores
     error,
