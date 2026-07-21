@@ -12,15 +12,20 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 
+import { useQuery } from '@tanstack/react-query';
 import { useReportes, useExportarReporte } from '@/lib/hooks/useReportes';
 import { ResumenDiario } from '@/components/reportes/ResumenDiario';
 import { GraficaVentasPorHora } from '@/components/reportes/GraficaVentasPorHora';
 import { GraficaVentasPorCanal } from '@/components/reportes/GraficaVentasPorCanal';
 import { TablaProductosMasVendidos } from '@/components/reportes/TablaProductosMasVendidos';
 import { TablaDesempenoRepartidores } from '@/components/reportes/TablaDesempenoRepartidores';
+import { pedidosService } from '@/lib/services/pedidos.service';
+import { startOfDay, endOfDay, subDays } from 'date-fns';
 
 export default function ReportesPage() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date());
+  const [showDiag, setShowDiag] = useState(false);
+
   const {
     resumenDiario,
     ventasPorHora,
@@ -29,8 +34,37 @@ export default function ReportesPage() {
     desempenoRepartidores,
     comparativa,
     isLoading,
+    error,
     refetchResumen,
   } = useReportes(fechaSeleccionada);
+
+  // Diagnóstico: query directa a Firestore
+  const { data: diagData, error: diagError, refetch: diagRefetch, isLoading: diagLoading } = useQuery({
+    queryKey: ['diag-pedidos', fechaSeleccionada.toDateString()],
+    queryFn: async () => {
+      const inicio = startOfDay(fechaSeleccionada);
+      const fin = endOfDay(fechaSeleccionada);
+      const hace30 = startOfDay(subDays(fechaSeleccionada, 30));
+      const [hoy, mes] = await Promise.all([
+        pedidosService.getByRangoFechas(inicio, fin),
+        pedidosService.getByRangoFechas(hace30, fin),
+      ]);
+      return {
+        totalHoy: hoy.length,
+        totalMes: mes.length,
+        primerPedido: mes[0] ? {
+          id: mes[0].id,
+          fechaCreacion: mes[0].fechaCreacion?.seconds
+            ? new Date(mes[0].fechaCreacion.seconds * 1000).toISOString()
+            : 'sin fecha',
+          estado: mes[0].estado,
+          cancelado: mes[0].cancelado,
+          total: mes[0].totales?.total,
+        } : null,
+      };
+    },
+    enabled: showDiag,
+  });
 
   const { exportarAExcel } = useExportarReporte();
 
@@ -130,6 +164,53 @@ export default function ReportesPage() {
         </p>
       </div>
 
+      {/* Panel de diagnóstico */}
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-amber-800">
+            ¿No ves datos? Ejecuta el diagnóstico para ver qué está pasando.
+          </p>
+          <button
+            onClick={() => { setShowDiag(true); diagRefetch(); }}
+            className="rounded bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"
+          >
+            {diagLoading ? 'Consultando...' : 'Diagnosticar'}
+          </button>
+        </div>
+        {showDiag && (
+          <div className="mt-2 rounded bg-white p-3 text-xs font-mono">
+            {diagLoading && <p>Consultando Firestore...</p>}
+            {diagError && <p className="text-red-600">ERROR: {String(diagError)}</p>}
+            {diagData && (
+              <div className="space-y-1">
+                <p>Pedidos HOY ({format(fechaSeleccionada, 'yyyy-MM-dd')}): <strong>{diagData.totalHoy}</strong></p>
+                <p>Pedidos últimos 30 días: <strong>{diagData.totalMes}</strong></p>
+                {diagData.primerPedido && (
+                  <div className="mt-2 border-t pt-2">
+                    <p className="font-semibold">Primer pedido encontrado:</p>
+                    <pre className="text-[10px] mt-1">{JSON.stringify(diagData.primerPedido, null, 2)}</pre>
+                  </div>
+                )}
+                {diagData.totalMes === 0 && (
+                  <p className="text-red-600 mt-1">⚠️ No hay pedidos en los últimos 30 días. Verifica que estás en el proyecto Firebase correcto (oldtexasbbq) y que los pedidos se registran con fechaCreacion.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Error de carga */}
+      {error && !isLoading && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <p className="font-semibold mb-1">Error al cargar reportes:</p>
+          <p className="font-mono text-xs">{String(error)}</p>
+          <p className="mt-2 text-xs text-red-600">
+            Revisa la consola del navegador para más detalles. Puede ser un índice faltante en Firestore o un problema de permisos.
+          </p>
+        </div>
+      )}
+
       {/* Resumen Diario */}
       {resumenDiario && (
         <ResumenDiario
@@ -138,7 +219,7 @@ export default function ReportesPage() {
           isLoading={isLoading}
         />
       )}
-      {!resumenDiario && !isLoading && (
+      {!resumenDiario && !isLoading && !error && (
         <div className="rounded-lg border border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
           Sin pedidos registrados para este día.
         </div>

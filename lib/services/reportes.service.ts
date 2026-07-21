@@ -88,10 +88,14 @@ class ReportesService {
     const inicio = Timestamp.fromDate(startOfDay(fecha));
     const fin = Timestamp.fromDate(endOfDay(fecha));
 
+    console.log('[Reportes] getResumenDiario — rango:', inicio.toDate().toISOString(), '→', fin.toDate().toISOString());
+
     const pedidos = await pedidosService.getByRangoFechas(
       inicio.toDate(),
       fin.toDate()
     );
+
+    console.log('[Reportes] pedidos encontrados:', pedidos.length, pedidos.map(p => ({ id: p.id, fechaCreacion: p.fechaCreacion?.toDate?.()?.toISOString(), cancelado: p.cancelado, total: p.totales?.total })));
 
     // Filtrar pedidos no cancelados
     const pedidosValidos = pedidos.filter((p) => !p.cancelado);
