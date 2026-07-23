@@ -103,7 +103,12 @@ const navigation: NavItem[] = [
     href: '/reportes',
     icon: BarChart3,
     roles: ['admin', 'encargado'],
-    soon: true,
+  },
+  {
+    title: 'Reporte Financiero',
+    href: '/reportes/financiero',
+    icon: TrendingUp,
+    roles: ['admin', 'encargado'],
   },
   {
     title: 'Nómina',

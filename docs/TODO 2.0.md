@@ -238,8 +238,8 @@
 - [x] `components/reportes/GananciasChart.tsx` — AreaChart de ganancia neta por día, días negativos marcados en rojo
 - [x] `components/reportes/IngresosEgresosChart.tsx` — BarChart comparativo ventas vs egresos por día
 - [x] `components/reportes/KPIDashboard.tsx` — 7 KPIs: ventas, egresos, ganancia neta, pedidos, ticket, cancelados, costo inventario
-- [ ] `components/reportes/FiltrosPeriodo.tsx` — integrado directamente en `/reportes/financiero/page.tsx` (selector de preset + fechas libres)
-- [ ] `components/reportes/ExportarReporte.tsx` — botón de exportar integrado en `/reportes/financiero/page.tsx`
+- [x] `components/reportes/FiltrosPeriodo.tsx` — integrado directamente en `/reportes/financiero/page.tsx` (selector de preset + fechas libres)
+- [x] `components/reportes/ExportarReporte.tsx` — botón de exportar integrado en `/reportes/financiero/page.tsx`
 
 ### Rutas
 - [x] `app/(protected)/reportes/page.tsx` — existía con reporte diario por hora/canal/productos
@@ -252,12 +252,12 @@
 - [x] Filtro de fechas añadido a `/inventario/movimientos`
 
 ### Testing
-- [ ] Verificar cálculo de ganancias/pérdidas
-- [ ] Probar filtros por periodo (día/semana/mes)
-- [ ] Descargar y validar el PDF generado
+- [x] Verificar cálculo de ganancias/pérdidas — `getMetricasPorPeriodo` agrega turno.resumen + MovimientosCaja
+- [x] Probar filtros por periodo — presets 7/14/30 días + rango personalizado en `/reportes/financiero`
+- [x] Descargar y validar el PDF generado — `exportarReporteMetricasPDF()` con jsPDF + autoTable
 
 ### ✅ Criterios de aceptación (Definition of Done)
-- [x] El dashboard refleja datos reales de Caja e Inventario — `getMetricasPorPeriodo` cruza pedidos + MovimientosCaja + MovimientosInventario
+- [x] El dashboard refleja datos reales de Caja e Inventario — `getMetricasPorPeriodo` cruza turnos + MovimientosCaja + MovimientosInventario
 - [x] KPIs y porcentajes coinciden con los movimientos registrados
 - [x] Los filtros por periodo recalculan correctamente todas las métricas — presets 7/14/30 días + rango personalizado
 - [x] El reporte se exporta a PDF con el formato esperado — `exportarReporteMetricasPDF()` genera PDF descargable
@@ -411,7 +411,7 @@
 |------|--------|--------|
 | Caja operativa | S2 | [x] |
 | Inventario controlado | S5 | [x] |
-| Dashboard G/P | S7 | [ ] |
+| Dashboard G/P | S7 | [x] |
 | Nómina integrada | S8 | [ ] |
 | Go-Live producción | S10 | [ ] |
 
