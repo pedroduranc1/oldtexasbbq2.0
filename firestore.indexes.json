@@ -94,6 +94,14 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "MovimientosCaja",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "turno_id", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

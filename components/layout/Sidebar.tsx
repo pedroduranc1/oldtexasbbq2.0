@@ -14,6 +14,7 @@ import {
   Users,
   DollarSign,
   ChevronLeft,
+  ChevronDown,
   Menu,
   UtensilsCrossed,
   PackageOpen,
@@ -30,13 +31,13 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   roles: Rol[];
-  soon?: boolean; // módulo en desarrollo — no navega, solo visual
+  soon?: boolean;
+  children?: { title: string; href: string }[];
 }
 
 // ── Módulos activos del sistema ─────────────────────────────────────────────
-// Orden: operativos diarios primero, luego financieros/gerenciales
 const navigation: NavItem[] = [
-  // ── Operación ──────────────────────────────────────────────────────────────
+  // ── Operación diaria ───────────────────────────────────────────────────────
   {
     title: 'Dashboard',
     href: '/dashboard',
@@ -73,11 +74,23 @@ const navigation: NavItem[] = [
     icon: UtensilsCrossed,
     roles: ['admin', 'encargado'],
   },
-  // ── Financiero / 2.0 ───────────────────────────────────────────────────────
+  // ── Gestión financiera ─────────────────────────────────────────────────────
   {
-    title: 'Financiero',
+    title: 'Caja',
+    href: '/caja',
+    icon: DollarSign,
+    roles: ['admin', 'encargado', 'cajera'],
+  },
+  {
+    title: 'Finanzas',
     href: '/financiero',
     icon: TrendingUp,
+    roles: ['admin', 'encargado'],
+  },
+  {
+    title: 'Inventario',
+    href: '/inventario',
+    icon: PackageOpen,
     roles: ['admin', 'encargado'],
   },
   {
@@ -86,29 +99,16 @@ const navigation: NavItem[] = [
     icon: FileUp,
     roles: ['admin', 'encargado'],
   },
-  {
-    title: 'Caja',
-    href: '/caja',
-    icon: DollarSign,
-    roles: ['admin', 'encargado', 'cajera'],
-  },
-  {
-    title: 'Inventario',
-    href: '/inventario',
-    icon: PackageOpen,
-    roles: ['admin', 'encargado']
-  },
+  // ── Análisis ───────────────────────────────────────────────────────────────
   {
     title: 'Reportes',
     href: '/reportes',
     icon: BarChart3,
     roles: ['admin', 'encargado'],
-  },
-  {
-    title: 'Reporte Financiero',
-    href: '/reportes/financiero',
-    icon: TrendingUp,
-    roles: ['admin', 'encargado'],
+    children: [
+      { title: 'Diario', href: '/reportes' },
+      { title: 'Financiero', href: '/reportes/financiero' },
+    ],
   },
   {
     title: 'Nómina',
@@ -126,14 +126,128 @@ interface SidebarProps {
   onCollapsedChange: (collapsed: boolean) => void;
 }
 
+// Secciones del sidebar — cada sección agrupa ítems de navigation
+const SECCIONES: { label: string; hrefs: string[] }[] = [
+  { label: 'Operación', hrefs: ['/dashboard', '/pedidos', '/cocina', '/reparto', '/repartidores', '/productos'] },
+  { label: 'Gestión', hrefs: ['/caja', '/financiero', '/inventario', '/importar'] },
+  { label: 'Análisis', hrefs: ['/reportes', '/nomina'] },
+];
+
 export function Sidebar({ isOpen, onClose, isCollapsed, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname();
   const { userData } = useAuth();
+  const [reportesExpanded, setReportesExpanded] = useState(true);
 
-  // Filtrar navegación según rol del usuario
   const filteredNavigation = navigation.filter((item) =>
     userData?.rol ? item.roles.includes(userData.rol) : false
   );
+
+  // Agrupa ítems por sección
+  const seccionesConItems = SECCIONES.map((sec) => ({
+    label: sec.label,
+    items: filteredNavigation.filter((item) => sec.hrefs.includes(item.href)),
+  })).filter((sec) => sec.items.length > 0);
+
+  const renderItem = (item: NavItem) => {
+    const Icon = item.icon;
+
+    if (item.soon) {
+      return (
+        <div
+          key={item.href}
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 rounded-lg',
+            'opacity-40 cursor-not-allowed select-none text-muted-foreground'
+          )}
+          title={`${item.title} — próximamente`}
+        >
+          <Icon className="h-5 w-5 shrink-0" />
+          {!isCollapsed && (
+            <div className="flex items-center justify-between flex-1 min-w-0">
+              <span className="font-medium text-sm">{item.title}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-wide bg-muted px-1.5 py-0.5 rounded">
+                Soon
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Ítem con subitems (ej. Reportes)
+    if (item.children && !isCollapsed) {
+      const isParentActive = item.children.some((c) => pathname === c.href);
+      const isExpanded = item.href === '/reportes' ? reportesExpanded : false;
+      const toggleExpanded = item.href === '/reportes'
+        ? () => setReportesExpanded((v) => !v)
+        : undefined;
+
+      return (
+        <div key={item.href}>
+          <button
+            onClick={toggleExpanded}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+              'hover:bg-accent hover:text-accent-foreground',
+              isParentActive ? 'text-foreground font-semibold' : 'text-muted-foreground'
+            )}
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            <span className="font-medium text-sm flex-1 text-left">{item.title}</span>
+            <ChevronDown
+              className={cn('h-3.5 w-3.5 transition-transform', isExpanded && 'rotate-180')}
+            />
+          </button>
+
+          {isExpanded && (
+            <div className="mt-0.5 ml-4 pl-3 border-l border-border space-y-0.5">
+              {item.children.map((child) => {
+                const isChildActive = pathname === child.href;
+                return (
+                  <Link key={child.href} href={child.href} onClick={onClose}>
+                    <div
+                      className={cn(
+                        'flex items-center px-3 py-1.5 rounded-md text-sm transition-colors',
+                        'hover:bg-accent hover:text-accent-foreground',
+                        isChildActive
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      {child.title}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Ítem normal
+    const isActive = pathname === item.href ||
+      (item.href !== '/reportes' && pathname.startsWith(item.href + '/'));
+
+    return (
+      <Link key={item.href} href={item.href} onClick={onClose}>
+        <div
+          className={cn(
+            'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+            'hover:bg-accent hover:text-accent-foreground',
+            isActive
+              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+              : 'text-muted-foreground'
+          )}
+        >
+          <Icon className="h-5 w-5 shrink-0" />
+          {!isCollapsed && (
+            <span className="font-medium text-sm">{item.title}</span>
+          )}
+        </div>
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -198,72 +312,22 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onCollapsedChange }: Sid
 
           {/* Navegación */}
           <ScrollArea className="flex-1 px-3 py-4">
-            <nav className="space-y-1">
-              {/* Separador antes de la sección financiera */}
-              {!isCollapsed && (
-                <p className="px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                  Operación
-                </p>
-              )}
-
-              {filteredNavigation.map((item, idx) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-
-                // Insertar label de sección antes del primer módulo financiero
-                const esPrimerFinanciero = item.href === '/financiero';
-
-                return (
-                  <div key={item.href}>
-                    {esPrimerFinanciero && !isCollapsed && (
-                      <p className="px-3 pt-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Financiero
-                      </p>
-                    )}
-                    {esPrimerFinanciero && isCollapsed && (
-                      <div className="border-t border-border my-2" />
-                    )}
-
-                    {item.soon ? (
-                      // Item deshabilitado — próximamente
-                      <div
-                        className={cn(
-                          'flex items-center gap-3 px-3 py-2 rounded-lg',
-                          'opacity-40 cursor-not-allowed select-none text-muted-foreground'
-                        )}
-                        title={`${item.title} — próximamente`}
-                      >
-                        <Icon className="h-5 w-5 shrink-0" />
-                        {!isCollapsed && (
-                          <div className="flex items-center justify-between flex-1 min-w-0">
-                            <span className="font-medium text-sm">{item.title}</span>
-                            <span className="text-[9px] font-semibold uppercase tracking-wide bg-muted px-1.5 py-0.5 rounded">
-                              Soon
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <Link href={item.href} onClick={onClose}>
-                        <div
-                          className={cn(
-                            'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
-                            'hover:bg-accent hover:text-accent-foreground',
-                            isActive
-                              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                              : 'text-muted-foreground'
-                          )}
-                        >
-                          <Icon className="h-5 w-5 shrink-0" />
-                          {!isCollapsed && (
-                            <span className="font-medium text-sm">{item.title}</span>
-                          )}
-                        </div>
-                      </Link>
-                    )}
+            <nav className="space-y-4">
+              {seccionesConItems.map((seccion, si) => (
+                <div key={seccion.label}>
+                  {!isCollapsed && (
+                    <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                      {seccion.label}
+                    </p>
+                  )}
+                  {isCollapsed && si > 0 && (
+                    <div className="border-t border-border mb-2" />
+                  )}
+                  <div className="space-y-0.5">
+                    {seccion.items.map(renderItem)}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </nav>
           </ScrollArea>
 

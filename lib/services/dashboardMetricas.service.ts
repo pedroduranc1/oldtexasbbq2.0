@@ -50,7 +50,6 @@ export async function getMetricasPorPeriodo(
 
   // Turnos del periodo → fuente principal de ventas/pedidos
   const turnos = await turnosService.getTurnosPorRango(inicioStr, finStr);
-
   // Agregar totales desde resúmenes de turno
   let totalVentas       = 0;
   let totalPedidos      = 0;
@@ -83,8 +82,13 @@ export async function getMetricasPorPeriodo(
 
   const ticketPromedio = totalPedidos > 0 ? totalVentas / totalPedidos : 0;
 
-  // Movimientos de caja → egresos
-  const movCaja     = await getMovimientosPorTurnos(turnos.map((t) => t.id));
+  // Movimientos de caja → egresos (tolerante a error de índice faltante)
+  let movCaja: Awaited<ReturnType<typeof getMovimientosPorTurnos>> = [];
+  try {
+    movCaja = await getMovimientosPorTurnos(turnos.map((t) => t.id));
+  } catch (e) {
+    console.warn('[Financiero] getMovimientosPorTurnos falló (posible índice faltante):', e);
+  }
   const egresosValidos = movCaja.filter((m) => m.tipo === 'egreso' && !m.corregidoPor);
   const totalEgresos   = egresosValidos.reduce((s, m) => s + m.monto, 0);
   const gananciaNeta   = totalVentas - totalEgresos;
@@ -96,11 +100,16 @@ export async function getMetricasPorPeriodo(
   }
 
   // Movimientos de inventario (entradas = costo de compra)
-  const movInv = await getMovimientos({
-    tipo: 'entrada',
-    fechaInicio: startOfDay(inicio),
-    fechaFin:    endOfDay(fin),
-  });
+  let movInv: Awaited<ReturnType<typeof getMovimientos>> = [];
+  try {
+    movInv = await getMovimientos({
+      tipo: 'entrada',
+      fechaInicio: startOfDay(inicio),
+      fechaFin:    endOfDay(fin),
+    });
+  } catch (e) {
+    console.warn('[Financiero] getMovimientos inventario falló:', e);
+  }
   const costoInventario = movInv.reduce((s, m) => s + (m.costoTotal ?? 0), 0);
   const costoDiaMap: Record<string, number> = {};
   for (const m of movInv) {

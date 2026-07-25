@@ -65,8 +65,14 @@ class TurnosService extends BaseService<Turno> {
    * Obtiene turnos en un rango de fechas (formato "YYYY-MM-DD").
    */
   async getTurnosPorRango(fechaInicio: string, fechaFin: string): Promise<Turno[]> {
-    const todos = await this.getTodos();
-    return todos.filter((t) => t.fecha >= fechaInicio && t.fecha <= fechaFin);
+    return this.getAll({
+      filters: [
+        { field: 'fecha', operator: '>=', value: fechaInicio },
+        { field: 'fecha', operator: '<=', value: fechaFin },
+      ],
+      orderByField: 'fecha',
+      orderDirection: 'asc',
+    });
   }
 
   /**
