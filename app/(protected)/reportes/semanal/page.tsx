@@ -131,7 +131,10 @@ async function getReporteSemanal(semana: Date) {
   );
   const turnoIds = turnos.map((t) => t.id);
 
-  const movimientos = await getMovimientosPorTurnos(turnoIds);
+  let movimientos: Awaited<ReturnType<typeof getMovimientosPorTurnos>> = [];
+  try {
+    movimientos = await getMovimientosPorTurnos(turnoIds);
+  } catch { /* índice pendiente — continuar sin egresos */ }
   const egresos = movimientos.filter((m) => m.tipo === 'egreso' && !m.corregidoPor);
   const ingresos = movimientos.filter((m) => m.tipo === 'ingreso' && !m.corregidoPor);
 
@@ -417,10 +420,10 @@ export default function ReporteSemanalPage() {
                 width={55}
               />
               <Tooltip
-                formatter={(value: number | string, name: string) => [
+                formatter={(value, name) => [
                   fmtPesos(Number(value)),
                   name === 'ventas' ? 'Ventas' : 'Egresos',
-                ]}
+                ] as [string, string]}
                 labelFormatter={(label) => `Día: ${label}`}
                 contentStyle={{ fontSize: 12 }}
               />
@@ -457,7 +460,7 @@ export default function ReporteSemanalPage() {
                 tickLine={false}
                 width={30}
               />
-              <Tooltip formatter={(v: number | string) => [Number(v), 'Pedidos']} />
+              <Tooltip formatter={(v) => [Number(v), 'Pedidos'] as [number, string]} />
               <Line
                 type="monotone"
                 dataKey="pedidos"

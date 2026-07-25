@@ -107,6 +107,7 @@ const navigation: NavItem[] = [
     roles: ['admin', 'encargado'],
     children: [
       { title: 'Diario', href: '/reportes' },
+      { title: 'Semanal', href: '/reportes/semanal' },
       { title: 'Financiero', href: '/reportes/financiero' },
     ],
   },
