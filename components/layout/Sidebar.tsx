@@ -116,7 +116,6 @@ const navigation: NavItem[] = [
     href: '/nomina',
     icon: Wallet,
     roles: ['admin', 'encargado'],
-    soon: true,
   },
 ];
 

@@ -849,3 +849,74 @@ export interface FlujoSemanal {
   fechaCreacion: Timestamp;
   fechaActualizacion: Timestamp;
 }
+
+// ============================================================================
+// COLECCIÓN: Empleados
+// ============================================================================
+
+export type CargoEmpleado =
+  | 'cajera'
+  | 'cocinero'
+  | 'repartidor'
+  | 'encargado'
+  | 'limpieza'
+  | 'otro';
+
+export type EstadoEmpleado = 'activo' | 'inactivo' | 'baja';
+
+export type PeriodoNomina = 'semanal' | 'quincenal' | 'mensual';
+
+export interface Empleado {
+  id: string;
+  nombre: string;
+  cargo: CargoEmpleado;
+  salarioBase: number;
+  periodoPago: PeriodoNomina;
+  /** YYYY-MM-DD */
+  fechaContratacion: string;
+  telefono?: string;
+  notas?: string;
+  estado: EstadoEmpleado;
+  /** Si está vinculado a un usuario del sistema */
+  usuarioId?: string;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
+
+export type NuevoEmpleado = Omit<Empleado, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
+
+// ============================================================================
+// COLECCIÓN: Nominas
+// ============================================================================
+
+export type EstadoNomina = 'pendiente' | 'pagada' | 'cancelada';
+
+export interface Nomina {
+  id: string;
+  empleadoId: string;
+  empleadoNombre: string;
+  cargo: CargoEmpleado;
+  /** YYYY-MM-DD del inicio del periodo */
+  periodoInicio: string;
+  /** YYYY-MM-DD del fin del periodo */
+  periodoFin: string;
+  periodoPago: PeriodoNomina;
+  salarioBase: number;
+  bonos: number;
+  descuentos: number;
+  /** salarioBase + bonos - descuentos */
+  totalNeto: number;
+  estado: EstadoNomina;
+  notas?: string;
+  /** ID del MovimientoCaja generado al pagar */
+  movimientoCajaId?: string;
+  /** Turno desde el que se pagó */
+  turnoId?: string;
+  pagadoPor?: string;
+  pagadoPorNombre?: string;
+  fechaPago?: Timestamp;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
+
+export type NuevaNomina = Omit<Nomina, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
