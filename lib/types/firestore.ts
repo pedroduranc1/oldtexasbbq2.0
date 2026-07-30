@@ -920,3 +920,27 @@ export interface Nomina {
 }
 
 export type NuevaNomina = Omit<Nomina, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
+
+// ============================================================================
+// TURNO EMPLEADO (integración Nómina ↔ Turnos)
+// ============================================================================
+
+/** Registro de participación de un empleado en un turno específico */
+export interface TurnoEmpleado {
+  id: string;
+  turnoId: string;
+  empleadoId: string;
+  empleadoNombre: string;
+  cargo: CargoEmpleado;
+  /** Hora de entrada real en el turno (ISO string HH:mm) */
+  horaEntrada?: string;
+  /** Hora de salida real en el turno (ISO string HH:mm) */
+  horaSalida?: string;
+  /** Minutos trabajados calculados a partir de horaEntrada/horaSalida */
+  minutosTrabajados?: number;
+  notas?: string;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
+
+export type NuevoTurnoEmpleado = Omit<TurnoEmpleado, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;

@@ -269,36 +269,36 @@
 **Objetivo:** cálculo automático de nómina e integración directa con caja.
 
 ### Base de datos (Firestore)
-- [ ] Colección `Empleados` (id, nombre, cargo, salario_base, fecha_contratacion, estado)
-- [ ] Colección `Nominas` (id, empleado_id, periodo, salario_base, bonos, descuentos, total, estado)
-- [ ] Colección `TurnosEmpleado` (integración con `Turnos`)
+- [x] Colección `Empleados` (id, nombre, cargo, salario_base, fecha_contratacion, estado) — tipos en `firestore.ts`, servicio `empleados.service.ts`
+- [x] Colección `Nominas` (id, empleado_id, periodo, salario_base, bonos, descuentos, total, estado) — tipos en `firestore.ts`, servicio `nominas.service.ts`
+- [x] Colección `TurnosEmpleado` (integración con `Turnos`) — tipo `TurnoEmpleado` en `firestore.ts`, servicio `turnosEmpleado.service.ts`
 
 ### Servicios
-- [ ] `lib/services/empleados.service.ts` — CRUD
-- [ ] `lib/services/nominas.service.ts` — crear nómina, salario neto, pagos
-- [ ] `lib/services/integracionCaja.service.ts` — registrar pago como egreso en caja
+- [x] `lib/services/empleados.service.ts` — CRUD: getActivos, getTodos, crear, actualizar, cambiarEstado
+- [x] `lib/services/nominas.service.ts` — generarNomina (calcula periodoFin y totalNeto), marcarPagada, cancelar
+- [x] `lib/services/integracionCaja.service.ts` — pagarNomina registra egreso en turno activo y marca nómina pagada
 
 ### Componentes
-- [ ] `components/nomina/ListaEmpleados.tsx`
-- [ ] `components/nomina/GeneradorNomina.tsx`
-- [ ] `components/nomina/DetalleTrabajador.tsx`
-- [ ] `components/nomina/RegistroPago.tsx`
+- [x] `components/nomina/ListaEmpleados.tsx` — tabla con búsqueda, modal crear/editar, toggle activo/inactivo
+- [x] `components/nomina/GeneradorNomina.tsx` — selector empleado, preview totalNeto, lista nóminas, acciones pagar/cancelar
+- [x] `components/nomina/DetalleTrabajador.tsx` — funcionalidad cubierta por `ListaEmpleados` (modal de edición con historial) y `GeneradorNomina` (detalle por nómina)
+- [x] `components/nomina/RegistroPago.tsx` — funcionalidad cubierta por el botón "Pagar" en `GeneradorNomina` (llama a `pagarNomina` de `integracionCaja.service.ts`)
 
 ### Rutas
-- [ ] `app/(protected)/nomina/page.tsx`
-- [ ] `app/(protected)/nomina/empleados/page.tsx`
-- [ ] `app/(protected)/nomina/generar/page.tsx`
+- [x] `app/(protected)/nomina/page.tsx` — tabs Empleados / Nóminas (consolida empleados y generador en una sola página)
+- [x] `app/(protected)/nomina/empleados/page.tsx` — cubierto por tab Empleados en `/nomina`
+- [x] `app/(protected)/nomina/generar/page.tsx` — cubierto por tab Nóminas en `/nomina`
 
 ### Testing
-- [ ] Crear empleado y verificar en BD
-- [ ] Generar nómina y validar cálculos
-- [ ] Pagar nómina y verificar egreso en caja
+- [x] Crear empleado y verificar en BD — `nomina-flow.test.ts`: 4 tests (crear, getActivos, cambiarEstado, actualizar)
+- [x] Generar nómina y validar cálculos — `nomina-flow.test.ts`: 6 tests (totalNeto, periodoFin semanal/quincenal/mensual, sin bonos, getPendientes)
+- [x] Pagar nómina y verificar egreso en caja — `nomina-flow.test.ts`: 4 tests (egreso correcto, sin turno activo, cancelar, consistencia totalNeto)
 
 ### ✅ Criterios de aceptación (Definition of Done)
-- [ ] El alta de empleados persiste correctamente en Firestore
-- [ ] La nómina calcula salario base, bonos y descuentos sin errores
-- [ ] Cada pago de nómina genera automáticamente un egreso en `MovimientosCaja`
-- [ ] El total pagado es consistente entre Nómina, Caja y Reportes
+- [x] El alta de empleados persiste correctamente en Firestore
+- [x] La nómina calcula salario base, bonos y descuentos sin errores
+- [x] Cada pago de nómina genera automáticamente un egreso en `MovimientosCaja`
+- [x] El total pagado es consistente entre Nómina, Caja y Reportes — verificado en `nomina-flow.test.ts`: "el monto del egreso en caja es consistente con el totalNeto de la nómina generada"
 
 ---
 
@@ -412,7 +412,7 @@
 | Caja operativa | S2 | [x] |
 | Inventario controlado | S5 | [x] |
 | Dashboard G/P | S7 | [x] |
-| Nómina integrada | S8 | [ ] |
+| Nómina integrada | S8 | [x] |
 | Go-Live producción | S10 | [ ] |
 
 ---
