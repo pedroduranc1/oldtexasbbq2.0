@@ -621,6 +621,97 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // COLECCIÓN: EMPLEADOS (módulo de nómina)
+    // ========================================================================
+
+    match /Empleados/{empleadoId} {
+      // Managers y cajera pueden leer (cajera necesita ver al personal activo)
+      allow read: if isAuthenticated() && isActive() &&
+                     hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Solo managers pueden crear y actualizar empleados
+      allow create, update: if isActive() && isManager();
+
+      // Solo admin puede eliminar
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: NOMINAS (módulo de nómina)
+    // ========================================================================
+
+    match /Nominas/{nominaId} {
+      // Managers pueden leer todas las nóminas
+      allow read: if isAuthenticated() && isActive() && isManager();
+
+      // Solo managers pueden crear (generarNomina)
+      allow create: if isActive() && isManager();
+
+      // Actualizar: managers pueden cambiar estado (pagar, cancelar)
+      allow update: if isActive() && isManager();
+
+      // Solo admin puede eliminar
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: TURNOSEMPLEADO (integración nómina ↔ turnos)
+    // ========================================================================
+
+    match /TurnosEmpleado/{registroId} {
+      // Managers y cajera pueden leer (cajera necesita ver quién está en turno)
+      allow read: if isAuthenticated() && isActive() &&
+                     hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Managers y cajera pueden registrar entrada/salida
+      allow create, update: if isActive() &&
+                               hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Solo admin puede eliminar
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: ANTICIPOS (flujo de efectivo)
+    // ========================================================================
+
+    match /Anticipos/{anticipoId} {
+      allow read: if isAuthenticated() && isActive() &&
+                     hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Cajera y managers pueden registrar anticipos
+      allow create: if isActive() &&
+                       hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Actualizar: ciclo de vida (aplicar, saldar, cancelar) — managers y cajera
+      allow update: if isActive() &&
+                       hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Solo admin puede eliminar
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: FLUJOEFECTIVO (flujo semanal)
+    // ========================================================================
+
+    match /FlujoEfectivo/{flujoId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create, update: if isActive() && isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: BITACORA
+    // ========================================================================
+
+    match /Bitacora/{entradaId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create: if isAuthenticated() && isActive();
+      allow update, delete: if isAdmin();
+    }
+
+    // ========================================================================
     // REGLA POR DEFECTO: DENEGAR TODO LO NO ESPECIFICADO
     // ========================================================================
 
