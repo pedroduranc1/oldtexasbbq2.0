@@ -53,7 +53,7 @@ class NominasService extends BaseService<Nomina> {
       descuentos,
       totalNeto,
       estado: 'pendiente',
-      notas,
+      ...(notas ? { notas } : {}),
     };
 
     return this.create(data);

@@ -31,11 +31,11 @@ const ESTADO_COLORS: Record<string, string> = {
   cancelada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
-function calcularFinPeriodo(inicio: Date, periodo: PeriodoNomina): Date {
+function calcularFinPeriodo(inicio: Date, periodo: PeriodoNomina | undefined): Date {
   switch (periodo) {
-    case 'semanal':   return addDays(addWeeks(inicio, 1), -1);
     case 'quincenal': return addDays(inicio, 14);
     case 'mensual':   return addDays(addMonths(inicio, 1), -1);
+    default:          return addDays(addWeeks(inicio, 1), -1); // semanal o sin dato
   }
 }
 
@@ -51,7 +51,7 @@ export function GeneradorNomina() {
   const [bonos, setBonos] = useState(0);
   const [descuentos, setDescuentos] = useState(0);
   const [notas, setNotas] = useState('');
-  const [filtroEmpleadoId, setFiltroEmpleadoId] = useState('');
+  const [filtroEmpleadoId, setFiltroEmpleadoId] = useState('__pendientes__');
 
   const { data: empleados = [] } = useQuery({
     queryKey: ['empleados-activos'],
@@ -62,17 +62,20 @@ export function GeneradorNomina() {
   const { data: nominas = [], isLoading: cargandoNominas } = useQuery({
     queryKey: ['nominas', filtroEmpleadoId],
     queryFn: () =>
-      filtroEmpleadoId
+      filtroEmpleadoId !== '__pendientes__'
         ? nominasService.getPorEmpleado(filtroEmpleadoId)
         : nominasService.getPendientes(),
     staleTime: 2 * 60 * 1000,
   });
 
   const empleadoSel = empleados.find((e) => e.id === empleadoId);
-  const totalNeto = empleadoSel ? empleadoSel.salarioBase + bonos - descuentos : 0;
-  const periodoFin = empleadoSel
-    ? format(calcularFinPeriodo(new Date(periodoInicio + 'T12:00:00'), empleadoSel.periodoPago), 'yyyy-MM-dd')
-    : '';
+  const totalNeto = empleadoSel ? (empleadoSel.salarioBase ?? 0) + bonos - descuentos : 0;
+  const periodoFin = (() => {
+    if (!empleadoSel || !periodoInicio) return '';
+    const d = new Date(periodoInicio + 'T12:00:00');
+    if (isNaN(d.getTime())) return '';
+    return format(calcularFinPeriodo(d, empleadoSel.periodoPago), 'yyyy-MM-dd');
+  })();
 
   const mutGenerar = useMutation({
     mutationFn: () => {
@@ -189,7 +192,7 @@ export function GeneradorNomina() {
         </div>
 
         {/* Preview */}
-        {empleadoSel && (
+        {empleadoSel && periodoInicio && (
           <div className="rounded-lg bg-muted/40 border border-border p-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Empleado</span>
@@ -244,10 +247,10 @@ export function GeneradorNomina() {
           <h3 className="font-semibold text-foreground">Nóminas</h3>
           <Select value={filtroEmpleadoId} onValueChange={setFiltroEmpleadoId}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Todas (pendientes)" />
+              <SelectValue placeholder="Pendientes de pago" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Pendientes de pago</SelectItem>
+              <SelectItem value="__pendientes__">Pendientes de pago</SelectItem>
               {empleados.map((e) => (
                 <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>
               ))}

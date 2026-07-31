@@ -15,11 +15,17 @@ class EmpleadosService extends BaseService<Empleado> {
   }
 
   async crear(data: NuevoEmpleado): Promise<string> {
-    return this.create(data);
+    const clean = { ...data };
+    if (clean.telefono === undefined) delete clean.telefono;
+    if (clean.notas    === undefined) delete clean.notas;
+    return this.create(clean);
   }
 
   async actualizar(id: string, data: Partial<NuevoEmpleado>): Promise<void> {
-    return this.update(id, data);
+    const clean = { ...data };
+    if (clean.telefono === undefined) delete clean.telefono;
+    if (clean.notas    === undefined) delete clean.notas;
+    return this.update(id, clean);
   }
 
   async cambiarEstado(id: string, estado: EstadoEmpleado): Promise<void> {

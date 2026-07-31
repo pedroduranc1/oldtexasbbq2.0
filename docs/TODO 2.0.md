@@ -302,6 +302,86 @@
 
 ---
 
+## Fase 4.5 — Nómina real (derivada de análisis de bitácora cliente) · Semana siguiente
+
+> Basada en el Excel real de nómina `202601-01-NOMINA OTB SF.xlsx` y la bitácora de problemas del cliente.
+> El sistema actual usa `salarioBase` fijo por periodo; el cliente usa `salarioDiario × días trabajados` con múltiples conceptos variables.
+
+### 1 — Modelo de datos extendido
+
+**Empleado — campos faltantes:**
+- [ ] Agregar `salarioDiario: number` a `Empleado` en `firestore.ts` (diferente de `salarioBase`)
+- [ ] Agregar `jornada: 'completa' | 'medio_tiempo'` a `Empleado`
+- [ ] Agregar `bonoPermanenciaFecha?: string` — fecha del próximo bono de permanencia (cada 6 meses)
+- [ ] Agregar `sucursal?: string` a `Empleado`
+- [ ] Actualizar `empleados.service.ts` para manejar los nuevos campos opcionales (limpiar `undefined` antes de Firestore)
+- [ ] Actualizar `ListaEmpleados.tsx` — formulario modal con los nuevos campos
+
+**Nómina semanal — nueva estructura de conceptos:**
+- [ ] Agregar a `Nomina` en `firestore.ts`:
+  - `totalDias: number` — días trabajados en el periodo
+  - `asistencias: Record<'L'|'M'|'Mi'|'J'|'V'|'S'|'D', 'A'|'D'|'V'|'F'>` — asistencia por día
+  - `bonoPA?: number` — Bono Puntualidad y Asistencia (condicional a asistencia perfecta)
+  - `bonoLimpieza?: number` — tarea semanal asignada
+  - `comisiones?: number` — exclusivo cajera, no se calcula automáticamente aún
+  - `tiempoExtra?: number` — horas × (salarioDiario / jornadaHoras)
+  - `adelantoSueldo?: number` — descuento por adelanto ya recibido
+  - `descuentoPrestamo?: number` — 10% del saldo del préstamo activo
+  - `descuentoComida?: number` — consumo a precio empleado descontado
+  - `faltantesCaja?: number` — exclusivo cajera, viene del corte
+  - `fondoAhorro?: number`
+
+### 2 — Registro de asistencia por día
+
+- [ ] Nueva colección `AsistenciaSemanal` en Firestore: `{ empleadoId, semanaInicio, asistencias: { L, M, Mi, J, V, S, D }, totalDias }`
+- [ ] Servicio `lib/services/asistencia.service.ts` — CRUD: crear semana, actualizar día, obtener por empleado/semana
+- [ ] Agregar reglas Firestore para `AsistenciaSemanal` en `firestore.rules`
+- [ ] Componente `components/nomina/RegistroAsistencia.tsx`:
+  - Selector de semana (lunes a domingo)
+  - Grid 7 columnas con botón por día: A / D / V / F (asistió / descansó / vacaciones / falta)
+  - Total de días trabajados calculado en vivo
+  - Guardar semana completa o día por día
+
+### 3 — Generador de nómina real (salario diario × días)
+
+- [ ] Actualizar `nominasService.generarNomina()` en `nominas.service.ts`:
+  - Calcular `salarioBase = empleado.salarioDiario × totalDias`
+  - Agregar sumatorio de todos los bonos como parámetros individuales (no un solo `bonos`)
+  - Agregar sumatorio de todos los descuentos como parámetros individuales (no un solo `descuentos`)
+  - `totalNeto = salarioDiario×días + bonoPA + bonoLimpieza + comisiones + tiempoExtra - adelantoSueldo - descuentoPrestamo - descuentoComida - faltantesCaja`
+- [ ] Actualizar `GeneradorNomina.tsx`:
+  - Mostrar registro de asistencia embebido (o enlace a `RegistroAsistencia`)
+  - Separar inputs por tipo: sección Bonos (PA, limpieza, comisiones, tiempo extra) y sección Descuentos (adelanto, préstamo, comida, faltantes)
+  - Preview desglosa cada concepto individualmente antes de generar
+
+### 4 — Expediente completo de empleado
+
+- [ ] Agregar campos de expediente a `Empleado` en `firestore.ts`:
+  - `curp?: string`, `rfc?: string`, `nss?: string`
+  - `fechaNacimiento?: string`
+  - `contactoEmergencia?: { nombre: string; telefono: string }`
+  - `direccion?: string`
+- [ ] Ampliar modal de `ListaEmpleados.tsx` con sección "Expediente" colapsable (campos opcionales)
+- [ ] Agregar préstamos activos: nueva colección `Prestamos` `{ empleadoId, montoTotal, saldoPendiente, descuentoSemanal, estado: 'activo'|'saldado' }`
+- [ ] Servicio `lib/services/prestamos.service.ts` — crear préstamo, aplicar descuento semanal, saldar
+- [ ] Agregar reglas Firestore para `Prestamos`
+- [ ] Mostrar préstamos activos en el modal del empleado con botón "Aplicar descuento esta semana"
+
+### Testing Fase 4.5
+- [ ] Test: calcular nómina real con asistencias parciales (ej. 5 de 7 días)
+- [ ] Test: bono PA se aplica solo con asistencia perfecta (7 días)
+- [ ] Test: descuento préstamo = 10% del saldo; saldo se actualiza después de aplicar
+- [ ] Test: totalNeto coincide con suma manual de todos los conceptos
+
+### ✅ Criterios de aceptación Fase 4.5
+- [ ] La nómina se calcula como `salarioDiario × días trabajados`, no monto fijo
+- [ ] Cada concepto (bono, descuento) queda registrado individualmente en Firestore
+- [ ] El registro de asistencia semanal alimenta automáticamente el cálculo de nómina
+- [ ] Los préstamos activos se descuentan automáticamente al generar la nómina
+- [ ] El expediente completo del empleado se puede capturar y editar
+
+---
+
 ---
 
 ## Backlog — Errores operativos detectados en bitácora del cliente

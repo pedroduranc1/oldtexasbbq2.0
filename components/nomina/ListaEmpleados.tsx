@@ -86,7 +86,15 @@ export function ListaEmpleados() {
   const abrirNuevo = () => { setEditando(null); setForm(EMPTY); setModalOpen(true); };
   const abrirEditar = (e: Empleado) => {
     setEditando(e);
-    setForm({ nombre: e.nombre, cargo: e.cargo, salarioBase: e.salarioBase, periodoPago: e.periodoPago, fechaContratacion: e.fechaContratacion, telefono: e.telefono ?? '', notas: e.notas ?? '' });
+    setForm({
+      nombre:            e.nombre            ?? '',
+      cargo:             e.cargo             ?? 'cajera',
+      salarioBase:       e.salarioBase       ?? 0,
+      periodoPago:       e.periodoPago       ?? 'semanal',
+      fechaContratacion: e.fechaContratacion ?? format(new Date(), 'yyyy-MM-dd'),
+      telefono:          e.telefono          ?? '',
+      notas:             e.notas             ?? '',
+    });
     setModalOpen(true);
   };
   const cerrarModal = () => { setModalOpen(false); setEditando(null); };
@@ -167,11 +175,13 @@ export function ListaEmpleados() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{CARGOS[emp.cargo]}</td>
                   <td className="px-4 py-3 text-right font-semibold text-foreground">
-                    ${emp.salarioBase.toLocaleString('es-MX')}
+                    ${(emp.salarioBase ?? 0).toLocaleString('es-MX')}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{PERIODOS[emp.periodoPago]}</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {format(new Date(emp.fechaContratacion + 'T12:00:00'), "d MMM yyyy", { locale: es })}
+                    {emp.fechaContratacion
+                      ? format(new Date(emp.fechaContratacion + 'T12:00:00'), "d MMM yyyy", { locale: es })
+                      : '—'}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_COLORS[emp.estado]}`}>
