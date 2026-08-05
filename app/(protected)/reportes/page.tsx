@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Calendar, Download, RefreshCw, CalendarDays } from 'lucide-react';
+import { Calendar, Download, RefreshCw, CalendarDays, Users, Receipt, Landmark } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -88,6 +88,30 @@ export default function ReportesPage() {
           >
             <CalendarDays className="h-4 w-4" />
             Reporte semanal
+          </Link>
+
+          <Link
+            href="/reportes/asistencia"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <Users className="h-4 w-4" />
+            Asistencia
+          </Link>
+
+          <Link
+            href="/reportes/nomina"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <Receipt className="h-4 w-4" />
+            Nómina
+          </Link>
+
+          <Link
+            href="/reportes/prestamos"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <Landmark className="h-4 w-4" />
+            Préstamos
           </Link>
 
           <button

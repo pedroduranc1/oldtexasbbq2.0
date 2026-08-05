@@ -712,6 +712,98 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // COLECCIÓN: ASISTENCIASEMANAL (Fase 4.5 — registro de asistencia diaria)
+    // ========================================================================
+
+    match /AsistenciaSemanal/{registroId} {
+      // Managers y cajera pueden leer (cajera ve la asistencia del equipo)
+      allow read: if isAuthenticated() && isActive() &&
+                     hasAnyRole(['admin', 'encargado', 'cajera']);
+
+      // Managers registran y actualizan asistencia
+      allow create, update: if isActive() && isManager();
+
+      // Solo admin puede eliminar
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: PRESTAMOS (Fase 4.5 — préstamos a empleados)
+    // ========================================================================
+
+    match /Prestamos/{prestamoId} {
+      // Solo managers pueden gestionar préstamos
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create, update: if isActive() && isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: HISTORIALDESCUENTOPRESTAMO (Fase 4.5 — audit trail descuentos)
+    // ========================================================================
+
+    match /HistorialDescuentoPrestamo/{entradaId} {
+      // Solo managers pueden leer el historial de descuentos
+      allow read: if isAuthenticated() && isActive() && isManager();
+
+      // Se crea automáticamente vía servicio al aplicar o saldar préstamo
+      allow create: if isActive() && isManager();
+
+      // Inmutable — no update, no delete (audit trail)
+      allow update, delete: if false;
+    }
+
+    // ========================================================================
+    // COLECCIÓN: conteosFisicos (inventario — conteo físico)
+    // ========================================================================
+
+    match /conteosFisicos/{conteoId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create, update: if isActive() && isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: movimientos_inventario (inventario — alias usado en movimientos.service)
+    // ========================================================================
+
+    match /movimientos_inventario/{movId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create: if isActive() && isManager();
+      allow update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: movimientos (alias alternativo de inventario)
+    // ========================================================================
+
+    match /movimientos/{movId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create: if isActive() && isManager();
+      allow update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: ordenes_compra (inventario — órdenes de compra a proveedores)
+    // ========================================================================
+
+    match /ordenes_compra/{ordenId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create, update: if isActive() && isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // COLECCIÓN: proveedores (minúscula — alias usado en proveedoresService.ts)
+    // ========================================================================
+
+    match /proveedores/{provId} {
+      allow read: if isAuthenticated() && isActive() && isManager();
+      allow create, update: if isActive() && isManager();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
     // REGLA POR DEFECTO: DENEGAR TODO LO NO ESPECIFICADO
     // ========================================================================
 

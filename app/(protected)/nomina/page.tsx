@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Receipt } from 'lucide-react';
+import { Users, Receipt, CalendarDays } from 'lucide-react';
 
-import { ListaEmpleados } from '@/components/nomina/ListaEmpleados';
-import { GeneradorNomina } from '@/components/nomina/GeneradorNomina';
+import { ListaEmpleados }     from '@/components/nomina/ListaEmpleados';
+import { GeneradorNomina }    from '@/components/nomina/GeneradorNomina';
+import { RegistroAsistencia } from '@/components/nomina/RegistroAsistencia';
 
 const TABS = [
-  { id: 'empleados', label: 'Empleados', icon: Users },
-  { id: 'nominas',   label: 'Nóminas',   icon: Receipt },
+  { id: 'empleados',  label: 'Empleados',  icon: Users },
+  { id: 'nominas',    label: 'Nóminas',    icon: Receipt },
+  { id: 'asistencia', label: 'Asistencia', icon: CalendarDays },
 ] as const;
 
 type Tab = (typeof TABS)[number]['id'];
@@ -21,7 +23,7 @@ export default function NominaPage() {
       <div>
         <h1 className="text-xl font-bold text-foreground">Nómina</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gestión de empleados y pagos de nómina
+          Gestión de empleados, pagos y asistencia semanal
         </p>
       </div>
 
@@ -43,8 +45,9 @@ export default function NominaPage() {
         ))}
       </div>
 
-      {tab === 'empleados' && <ListaEmpleados />}
-      {tab === 'nominas'   && <GeneradorNomina />}
+      {tab === 'empleados'  && <ListaEmpleados />}
+      {tab === 'nominas'    && <GeneradorNomina />}
+      {tab === 'asistencia' && <RegistroAsistencia />}
     </div>
   );
 }

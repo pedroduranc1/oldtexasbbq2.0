@@ -102,6 +102,63 @@
         { "fieldPath": "turno_id", "order": "ASCENDING" },
         { "fieldPath": "fecha", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "AsistenciaSemanal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empleadoId",   "order": "ASCENDING" },
+        { "fieldPath": "semanaInicio", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "AsistenciaSemanal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empleadoId",   "order": "ASCENDING" },
+        { "fieldPath": "semanaInicio", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "Prestamos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empleadoId",    "order": "ASCENDING" },
+        { "fieldPath": "estado",        "order": "ASCENDING" },
+        { "fieldPath": "fechaCreacion", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "Prestamos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empleadoId",    "order": "ASCENDING" },
+        { "fieldPath": "fechaCreacion", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "Nominas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empleadoId",    "order": "ASCENDING" },
+        { "fieldPath": "periodoInicio", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "Nominas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "periodoInicio", "order": "ASCENDING" },
+        { "fieldPath": "estado",        "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "TurnosEmpleado",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "empleadoId", "order": "ASCENDING" },
+        { "fieldPath": "fecha",      "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -866,17 +866,34 @@ export type EstadoEmpleado = 'activo' | 'inactivo' | 'baja';
 
 export type PeriodoNomina = 'semanal' | 'quincenal' | 'mensual';
 
+export type JornadaEmpleado = 'completa' | 'medio_tiempo';
+
 export interface Empleado {
   id: string;
   nombre: string;
   cargo: CargoEmpleado;
+  /** Salario base por periodo (legado — se mantiene para compatibilidad) */
   salarioBase: number;
+  /** Salario diario real usado para calcular nómina: salarioDiario × días trabajados */
+  salarioDiario?: number;
+  jornada?: JornadaEmpleado;
   periodoPago: PeriodoNomina;
   /** YYYY-MM-DD */
   fechaContratacion: string;
   telefono?: string;
   notas?: string;
   estado: EstadoEmpleado;
+  sucursal?: string;
+  /** YYYY-MM-DD — fecha del próximo bono de permanencia (cada 6 meses) */
+  bonoPermanenciaFecha?: string;
+  // Expediente
+  curp?: string;
+  rfc?: string;
+  nss?: string;
+  /** YYYY-MM-DD */
+  fechaNacimiento?: string;
+  direccion?: string;
+  contactoEmergencia?: { nombre: string; telefono: string };
   /** Si está vinculado a un usuario del sistema */
   usuarioId?: string;
   fechaCreacion: Timestamp;
@@ -891,6 +908,9 @@ export type NuevoEmpleado = Omit<Empleado, 'id' | 'fechaCreacion' | 'fechaActual
 
 export type EstadoNomina = 'pendiente' | 'pagada' | 'cancelada';
 
+export type DiasSemana = 'L' | 'M' | 'Mi' | 'J' | 'V' | 'S' | 'D';
+export type ValorAsistencia = 'A' | 'D' | 'V' | 'F';
+
 export interface Nomina {
   id: string;
   empleadoId: string;
@@ -901,10 +921,28 @@ export interface Nomina {
   /** YYYY-MM-DD del fin del periodo */
   periodoFin: string;
   periodoPago: PeriodoNomina;
+  /** Salario calculado = salarioDiario × totalDias (o salarioBase si no hay salarioDiario) */
   salarioBase: number;
+  /** Días realmente trabajados en el periodo (A = asistió) */
+  totalDias?: number;
+  /** Asistencia por día de la semana */
+  asistencias?: Partial<Record<DiasSemana, ValorAsistencia>>;
+  // Bonos individuales
+  bonoPA?: number;
+  bonoLimpieza?: number;
+  comisiones?: number;
+  tiempoExtra?: number;
+  /** Campo legado: suma de todos los bonos (retrocompatibilidad) */
   bonos: number;
+  // Descuentos individuales
+  adelantoSueldo?: number;
+  descuentoPrestamo?: number;
+  descuentoComida?: number;
+  faltantesCaja?: number;
+  fondoAhorro?: number;
+  /** Campo legado: suma de todos los descuentos (retrocompatibilidad) */
   descuentos: number;
-  /** salarioBase + bonos - descuentos */
+  /** salarioBase + suma_bonos - suma_descuentos */
   totalNeto: number;
   estado: EstadoNomina;
   notas?: string;
@@ -920,6 +958,28 @@ export interface Nomina {
 }
 
 export type NuevaNomina = Omit<Nomina, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
+
+// ============================================================================
+// COLECCIÓN: AsistenciaSemanal
+// ============================================================================
+
+export interface AsistenciaSemanal {
+  id: string;
+  empleadoId: string;
+  empleadoNombre: string;
+  /** YYYY-MM-DD del lunes de la semana */
+  semanaInicio: string;
+  /** YYYY-MM-DD del domingo de la semana */
+  semanaFin: string;
+  asistencias: Partial<Record<DiasSemana, ValorAsistencia>>;
+  /** Días con valor 'A' — calculado al guardar */
+  totalDias: number;
+  notas?: string;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
+
+export type NuevaAsistenciaSemanal = Omit<AsistenciaSemanal, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
 
 // ============================================================================
 // TURNO EMPLEADO (integración Nómina ↔ Turnos)
@@ -944,3 +1004,24 @@ export interface TurnoEmpleado {
 }
 
 export type NuevoTurnoEmpleado = Omit<TurnoEmpleado, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;
+
+// ============================================================================
+// COLECCIÓN: PRESTAMOS
+// ============================================================================
+
+export type EstadoPrestamo = 'activo' | 'saldado' | 'cancelado';
+
+export interface Prestamo {
+  id: string;
+  empleadoId: string;
+  empleadoNombre: string;
+  montoTotal: number;
+  saldoPendiente: number;
+  descuentoSemanal: number;
+  estado: EstadoPrestamo;
+  notas?: string;
+  fechaCreacion: Timestamp;
+  fechaActualizacion: Timestamp;
+}
+
+export type NuevoPrestamo = Omit<Prestamo, 'id' | 'fechaCreacion' | 'fechaActualizacion'>;

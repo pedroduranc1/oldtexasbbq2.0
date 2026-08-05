@@ -129,6 +129,41 @@ export async function getTodosCierres(): Promise<CierreCaja[]> {
 }
 
 // ============================================================================
+// FALTANTES POR CAJERO Y PERIODO (para descuento en nómina)
+// ============================================================================
+
+/**
+ * Suma los faltantes (diferencias negativas) de los cierres realizados por
+ * un usuario en un periodo. Se usa para pre-rellenar `faltantesCaja` en nómina.
+ *
+ * Nota: CierreCaja identifica al cajero por `usuario_id`. El periodo se filtra
+ * comparando la fecha del cierre (YYYY-MM-DD extraída de `fecha` Timestamp).
+ *
+ * Retorna el monto absoluto total de faltantes (siempre >= 0).
+ */
+export async function getFaltantesPorUsuarioYPeriodo(
+  usuarioId: string,
+  periodoInicio: string,
+  periodoFin: string,
+): Promise<number> {
+  const todos = await getTodosCierres();
+
+  const enPeriodo = todos.filter((c) => {
+    if (c.usuario_id !== usuarioId) return false;
+    const fechaStr = c.fecha instanceof Object && 'toDate' in c.fecha
+      ? c.fecha.toDate().toISOString().slice(0, 10)
+      : String(c.fecha).slice(0, 10);
+    return fechaStr >= periodoInicio && fechaStr <= periodoFin;
+  });
+
+  const totalFaltante = enPeriodo
+    .filter((c) => c.diferencia < 0)
+    .reduce((acc, c) => acc + Math.abs(c.diferencia), 0);
+
+  return Math.round(totalFaltante * 100) / 100;
+}
+
+// ============================================================================
 // REPORTE DE DIFERENCIAS
 // ============================================================================
 

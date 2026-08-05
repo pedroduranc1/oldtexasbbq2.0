@@ -1,6 +1,30 @@
 import { BaseService } from './base.service';
 import { Empleado, NuevoEmpleado, EstadoEmpleado } from '@/lib/types/firestore';
 
+const CAMPOS_OPCIONALES: (keyof NuevoEmpleado)[] = [
+  'telefono',
+  'notas',
+  'salarioDiario',
+  'jornada',
+  'sucursal',
+  'bonoPermanenciaFecha',
+  'curp',
+  'rfc',
+  'nss',
+  'fechaNacimiento',
+  'direccion',
+  'contactoEmergencia',
+  'usuarioId',
+];
+
+function limpiarUndefined(data: Partial<NuevoEmpleado>): Partial<NuevoEmpleado> {
+  const clean = { ...data } as Record<string, unknown>;
+  for (const campo of CAMPOS_OPCIONALES) {
+    if (clean[campo] === undefined) delete clean[campo];
+  }
+  return clean as Partial<NuevoEmpleado>;
+}
+
 class EmpleadosService extends BaseService<Empleado> {
   constructor() {
     super('Empleados');
@@ -15,17 +39,11 @@ class EmpleadosService extends BaseService<Empleado> {
   }
 
   async crear(data: NuevoEmpleado): Promise<string> {
-    const clean = { ...data };
-    if (clean.telefono === undefined) delete clean.telefono;
-    if (clean.notas    === undefined) delete clean.notas;
-    return this.create(clean);
+    return this.create(limpiarUndefined(data) as NuevoEmpleado);
   }
 
   async actualizar(id: string, data: Partial<NuevoEmpleado>): Promise<void> {
-    const clean = { ...data };
-    if (clean.telefono === undefined) delete clean.telefono;
-    if (clean.notas    === undefined) delete clean.notas;
-    return this.update(id, clean);
+    return this.update(id, limpiarUndefined(data));
   }
 
   async cambiarEstado(id: string, estado: EstadoEmpleado): Promise<void> {

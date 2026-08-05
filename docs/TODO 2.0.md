@@ -310,20 +310,20 @@
 ### 1 — Modelo de datos extendido
 
 **Empleado — campos faltantes:**
-- [ ] Agregar `salarioDiario: number` a `Empleado` en `firestore.ts` (diferente de `salarioBase`)
-- [ ] Agregar `jornada: 'completa' | 'medio_tiempo'` a `Empleado`
-- [ ] Agregar `bonoPermanenciaFecha?: string` — fecha del próximo bono de permanencia (cada 6 meses)
-- [ ] Agregar `sucursal?: string` a `Empleado`
-- [ ] Actualizar `empleados.service.ts` para manejar los nuevos campos opcionales (limpiar `undefined` antes de Firestore)
-- [ ] Actualizar `ListaEmpleados.tsx` — formulario modal con los nuevos campos
+- [x] Agregar `salarioDiario?: number` a `Empleado` en `firestore.ts` — `lib/types/firestore.ts`
+- [x] Agregar `jornada?: 'completa' | 'medio_tiempo'` a `Empleado` — tipo `JornadaEmpleado`
+- [x] Agregar `bonoPermanenciaFecha?: string` — fecha del próximo bono de permanencia (cada 6 meses)
+- [x] Agregar `sucursal?: string` a `Empleado`
+- [x] Actualizar `empleados.service.ts` — `limpiarUndefined()` genérico para todos los campos opcionales
+- [x] Actualizar `ListaEmpleados.tsx` — formulario modal con salarioDiario, jornada, sucursal, bonoPermanenciaFecha y sección Expediente colapsable
 
 **Nómina semanal — nueva estructura de conceptos:**
-- [ ] Agregar a `Nomina` en `firestore.ts`:
-  - `totalDias: number` — días trabajados en el periodo
-  - `asistencias: Record<'L'|'M'|'Mi'|'J'|'V'|'S'|'D', 'A'|'D'|'V'|'F'>` — asistencia por día
+- [x] Agregar a `Nomina` en `firestore.ts`:
+  - `totalDias?: number` — días trabajados en el periodo
+  - `asistencias?: Partial<Record<DiasSemana, ValorAsistencia>>` — asistencia por día
   - `bonoPA?: number` — Bono Puntualidad y Asistencia (condicional a asistencia perfecta)
   - `bonoLimpieza?: number` — tarea semanal asignada
-  - `comisiones?: number` — exclusivo cajera, no se calcula automáticamente aún
+  - `comisiones?: number` — exclusivo cajera
   - `tiempoExtra?: number` — horas × (salarioDiario / jornadaHoras)
   - `adelantoSueldo?: number` — descuento por adelanto ya recibido
   - `descuentoPrestamo?: number` — 10% del saldo del préstamo activo
@@ -333,52 +333,43 @@
 
 ### 2 — Registro de asistencia por día
 
-- [ ] Nueva colección `AsistenciaSemanal` en Firestore: `{ empleadoId, semanaInicio, asistencias: { L, M, Mi, J, V, S, D }, totalDias }`
-- [ ] Servicio `lib/services/asistencia.service.ts` — CRUD: crear semana, actualizar día, obtener por empleado/semana
-- [ ] Agregar reglas Firestore para `AsistenciaSemanal` en `firestore.rules`
-- [ ] Componente `components/nomina/RegistroAsistencia.tsx`:
-  - Selector de semana (lunes a domingo)
-  - Grid 7 columnas con botón por día: A / D / V / F (asistió / descansó / vacaciones / falta)
-  - Total de días trabajados calculado en vivo
-  - Guardar semana completa o día por día
+- [x] Nueva colección `AsistenciaSemanal` en Firestore — tipo `AsistenciaSemanal` + `NuevaAsistenciaSemanal` en `firestore.ts`
+- [x] Servicio `lib/services/asistencia.service.ts` — `guardarSemana`, `marcarDia`, `getPorEmpleadoYSemana`, `getPorEmpleado`, `getPorSemana`; helpers `contarDiasTrabajados`, `getLunesDeSemana`, `getDomingoDeSemana`, `getFechasDeSemana`
+- [x] Agregar reglas Firestore para `AsistenciaSemanal` y `Prestamos` en `firestore.rules` — desplegadas
+- [x] Componente `components/nomina/RegistroAsistencia.tsx` — selector de semana con navegación, grid 7×1 con botones A/D/V/F por clic cíclico, total días en vivo, guardar semana; integrado en `/nomina` como tab "Asistencia"
 
 ### 3 — Generador de nómina real (salario diario × días)
 
-- [ ] Actualizar `nominasService.generarNomina()` en `nominas.service.ts`:
-  - Calcular `salarioBase = empleado.salarioDiario × totalDias`
-  - Agregar sumatorio de todos los bonos como parámetros individuales (no un solo `bonos`)
-  - Agregar sumatorio de todos los descuentos como parámetros individuales (no un solo `descuentos`)
-  - `totalNeto = salarioDiario×días + bonoPA + bonoLimpieza + comisiones + tiempoExtra - adelantoSueldo - descuentoPrestamo - descuentoComida - faltantesCaja`
-- [ ] Actualizar `GeneradorNomina.tsx`:
-  - Mostrar registro de asistencia embebido (o enlace a `RegistroAsistencia`)
+- [x] Actualizar `nominasService.generarNomina()` en `nominas.service.ts`:
+  - Si empleado tiene `salarioDiario` y se provee `conceptos.totalDias`: `salarioCalculado = salarioDiario × totalDias`
+  - Si no: usa `salarioBase` (legado, retrocompatibilidad garantizada)
+  - Acepta `ConceptosNomina` con bonos y descuentos individuales
+  - Todos los campos opcionales se guardan con spread condicional (sin `undefined` en Firestore)
+- [x] Actualizar `GeneradorNomina.tsx`:
   - Separar inputs por tipo: sección Bonos (PA, limpieza, comisiones, tiempo extra) y sección Descuentos (adelanto, préstamo, comida, faltantes)
   - Preview desglosa cada concepto individualmente antes de generar
 
 ### 4 — Expediente completo de empleado
 
-- [ ] Agregar campos de expediente a `Empleado` en `firestore.ts`:
-  - `curp?: string`, `rfc?: string`, `nss?: string`
-  - `fechaNacimiento?: string`
-  - `contactoEmergencia?: { nombre: string; telefono: string }`
-  - `direccion?: string`
-- [ ] Ampliar modal de `ListaEmpleados.tsx` con sección "Expediente" colapsable (campos opcionales)
-- [ ] Agregar préstamos activos: nueva colección `Prestamos` `{ empleadoId, montoTotal, saldoPendiente, descuentoSemanal, estado: 'activo'|'saldado' }`
-- [ ] Servicio `lib/services/prestamos.service.ts` — crear préstamo, aplicar descuento semanal, saldar
-- [ ] Agregar reglas Firestore para `Prestamos`
-- [ ] Mostrar préstamos activos en el modal del empleado con botón "Aplicar descuento esta semana"
+- [x] Agregar campos de expediente a `Empleado` en `firestore.ts`: `curp`, `rfc`, `nss`, `fechaNacimiento`, `direccion`, `contactoEmergencia`
+- [x] Ampliar modal de `ListaEmpleados.tsx` con sección "Expediente" colapsable (CURP, RFC, NSS, fecha nacimiento, dirección, contacto emergencia)
+- [x] Agregar préstamos activos: nueva colección `Prestamos` `{ empleadoId, montoTotal, saldoPendiente, descuentoSemanal, estado: 'activo'|'saldado' }` — tipo `Prestamo` en `firestore.ts`
+- [x] Servicio `lib/services/prestamos.service.ts` — crear préstamo, aplicar descuento semanal, saldar
+- [x] Agregar reglas Firestore para `Prestamos` — en `firestore.rules`
+- [x] Mostrar préstamos activos en el modal del empleado con botón "Aplicar descuento esta semana"
 
 ### Testing Fase 4.5
-- [ ] Test: calcular nómina real con asistencias parciales (ej. 5 de 7 días)
-- [ ] Test: bono PA se aplica solo con asistencia perfecta (7 días)
-- [ ] Test: descuento préstamo = 10% del saldo; saldo se actualiza después de aplicar
-- [ ] Test: totalNeto coincide con suma manual de todos los conceptos
+- [x] Test: calcular nómina real con asistencias parciales (ej. 5 de 7 días) — `nomina-fase45.test.ts`
+- [x] Test: bono PA se aplica solo con asistencia perfecta (7 días) — `nomina-fase45.test.ts`
+- [x] Test: descuento préstamo = 10% del saldo; saldo se actualiza después de aplicar — `nomina-fase45.test.ts`
+- [x] Test: totalNeto coincide con suma manual de todos los conceptos — `nomina-fase45.test.ts`
 
 ### ✅ Criterios de aceptación Fase 4.5
-- [ ] La nómina se calcula como `salarioDiario × días trabajados`, no monto fijo
-- [ ] Cada concepto (bono, descuento) queda registrado individualmente en Firestore
-- [ ] El registro de asistencia semanal alimenta automáticamente el cálculo de nómina
-- [ ] Los préstamos activos se descuentan automáticamente al generar la nómina
-- [ ] El expediente completo del empleado se puede capturar y editar
+- [x] La nómina se calcula como `salarioDiario × días trabajados`, no monto fijo — `nominasService.generarNomina()` con `ConceptosNomina`
+- [x] Cada concepto (bono, descuento) queda registrado individualmente en Firestore — campos desglosados en `Nomina`
+- [x] El registro de asistencia semanal alimenta automáticamente el cálculo de nómina — `RegistroAsistencia` guarda en `AsistenciaSemanal`; `generarNomina` acepta `totalDias` y `asistencias`
+- [x] Los préstamos activos se descuentan automáticamente al generar la nómina — `prestamosService.aplicarDescuentoSemanal()` + botón en modal empleado
+- [x] El expediente completo del empleado se puede capturar y editar — sección colapsable en `ListaEmpleados`
 
 ---
 
@@ -444,6 +435,113 @@
 - [ ] Vincular un anticipo directamente desde un pedido en `/pedidos`
 - [ ] Tabla de anticipos por entrega estimada (vista calendario)
 - [ ] Exportar PDF del flujo semanal
+
+---
+
+## Fase 5.5 — Correcciones críticas y reportes operativos (derivadas de auditoría de módulos)
+
+> Derivada del análisis cruzado entre módulos implementados y requerimientos reales de bitácoras del cliente.
+> **Regla:** ítems de Prioridad 1 deben resolverse antes del Go-Live. Prioridad 2 mejoran reportes. Prioridad 3 son nice-to-have.
+
+---
+
+### Prioridad 1 — CRÍTICO (integridad operativa antes del Go-Live)
+
+#### P1.1 — Vincular asistencia → nómina automáticamente
+**Problema:** `GeneradorNomina.tsx` requiere teclear `totalDias` manualmente sin validar contra `AsistenciaSemanal`, generando riesgo de discrepancias.
+
+- [x] `components/nomina/GeneradorNomina.tsx` — al seleccionar empleado + inicio de periodo, consultar `asistenciaService.getPorEmpleadoYSemana()` y pre-rellenar `totalDias` y el objeto `asistencias`
+- [x] Mostrar badge "Asistencia cargada" cuando se encuentra registro existente; mostrar aviso "Sin registro de asistencia" cuando no existe
+- [x] Permitir edición manual de `totalDias` solo cuando NO hay asistencia registrada (o con confirmación explícita si sí la hay)
+
+#### P1.2 — Validar Bono PA contra asistencia real
+**Problema:** el campo `bonoPA` es un input libre; se puede pagar el bono aunque el empleado haya faltado.
+
+- [x] `components/nomina/GeneradorNomina.tsx` — si `bonoPA > 0`, verificar que `totalDias === 7` (asistencia perfecta); si no, mostrar alerta amarilla bloqueante con opción "Confirmar de todas formas"
+- [x] `lib/services/nominas.service.ts` — la confirmación queda registrada automáticamente en campo `notas` de la nómina generada
+
+#### P1.3 — Hacer `pagarNomina` transaccional (runTransaction)
+**Problema:** dos escrituras secuenciales — si la segunda falla, el MovimientoCaja queda registrado pero la Nómina sigue `pendiente`.
+
+- [x] `lib/services/integracionCaja.service.ts` — refactorizado con `runTransaction`: crea MovimientoCaja + actualiza Nómina en una sola operación atómica; verifica que la nómina exista y siga `pendiente` antes de ejecutar
+
+#### P1.4 — Crear índices de Firestore documentados
+**Problema:** queries con múltiples `where` (ej. `empleadoId + semanaInicio` en AsistenciaSemanal) pueden fallar en producción sin índice compuesto.
+
+- [x] `firestore.indexes.json` — agregados índices para `AsistenciaSemanal` (empleadoId+semanaInicio), `Prestamos` (empleadoId+estado, empleadoId+fechaCreacion), `Nominas` (empleadoId+periodoInicio, periodoInicio+estado), `TurnosEmpleado` (empleadoId+fecha)
+
+---
+
+### Prioridad 2 — ALTA (reportes críticos para el cliente)
+
+#### P2.1 — Reporte de asistencia multi-semana
+**Problema:** no existe vista que muestre el historial de asistencia de un empleado o del equipo.
+
+- [x] `lib/services/asistencia.service.ts` — agregar método `getResumenMultiSemana(empleadoId, cantSemanas: number)` que devuelva array de `AsistenciaSemanal` + tasa de asistencia calculada
+- [x] `app/(protected)/reportes/asistencia/page.tsx` — nueva página con:
+  - Selector de empleado (o "Todos")
+  - Tabla con últimas N semanas: columnas L/M/Mi/J/V/S/D + total días + tasa %
+  - Resaltado visual de faltas (rojo) y vacaciones (azul)
+  - Exportar CSV
+
+#### P2.2 — Reporte de nómina desglosada por concepto
+**Problema:** no existe vista comparativa de lo que se pagó semana a semana por concepto (bonos vs descuentos vs salario base).
+
+- [x] `lib/services/nominas.service.ts` — agregar método `getResumenPorPeriodo(inicio, fin)` que devuelva array de nóminas con todos sus campos desglosados
+- [x] `app/(protected)/reportes/nomina/page.tsx` — nueva página con:
+  - Filtro por empleado y rango de fechas
+  - Tabla: Empleado | Periodo | Salario base | Bono PA | Bono Limpieza | Comisiones | T.Extra | Adelanto | Préstamo | Comida | Faltantes | Fondo | Total Neto
+  - KPI totales al pie: suma de cada columna en el periodo
+  - Exportar CSV y PDF
+
+#### P2.3 — Reporte de préstamos activos e historial
+**Problema:** no hay visibilidad del saldo total de préstamos ni historial de descuentos aplicados.
+
+- [x] `lib/services/prestamos.service.ts` — agregar `getTodos()` y `getResumenDeuda()` (saldo pendiente total agrupado por empleado)
+- [x] Nueva colección `HistorialDescuentoPrestamo` `{ prestamoId, empleadoId, monto, fechaAplicacion }` — persistir cada vez que se ejecuta `aplicarDescuentoSemanal()`; regla Firestore inmutable en `firestore.rules`
+- [x] `app/(protected)/reportes/prestamos/page.tsx` — nueva página con:
+  - Tabla de préstamos activos: Empleado | Monto original | Saldo | Desc. semanal | Semanas restantes estimadas
+  - Historial de descuentos aplicados por préstamo (desplegable por fila)
+  - KPI: total deuda activa del equipo
+
+#### P2.4 — Integrar `faltantesCaja` desde corte al generador de nómina
+**Problema:** el campo existe en Nómina pero requiere llenado manual; debería consultar el `CierreCaja` del empleado/cajera.
+
+- [x] `lib/services/cierreCaja.service.ts` — agregar `getFaltantesPorUsuarioYPeriodo(usuarioId, inicio, fin)` que sume las diferencias negativas de los cierres del periodo
+- [x] `components/nomina/GeneradorNomina.tsx` — al seleccionar cajera + periodo, consultar `getFaltantesPorUsuarioYPeriodo()` y pre-rellenar `faltantesCaja` con alerta "Faltante detectado en corte: $XX"
+
+---
+
+### Prioridad 3 — MEDIA (mejoras de visibilidad financiera)
+
+#### P3.1 — Soporte multi-cuenta en flujo de efectivo
+**Problema:** `FlujoSemanal` tiene un único `saldoInicial/saldoFinal`; el cliente opera con 4 cuentas (Caja fondo, Caja chica, Banregio débito, Banorte crédito).
+
+- [ ] `lib/types/firestore.ts` — agregar `TipoCuenta = 'caja_fondo' | 'caja_chica' | 'banregio_debito' | 'banorte_credito'`
+- [ ] Extender `FlujoSemanal` con `cuentas?: Partial<Record<TipoCuenta, { saldoInicial: number; saldoFinal: number }>>` (retrocompatible)
+- [ ] `app/(protected)/financiero/flujo/page.tsx` — sección adicional "Saldos por cuenta" con inputs para capturar saldo de cada cuenta al iniciar y cerrar semana
+
+#### P3.2 — Análisis de cancelaciones por motivo
+**Problema:** no hay agregación de `motivoCancelacion` en reportes.
+
+- [ ] `lib/services/reportes.service.ts` — agregar `getAnalisisCancelaciones(inicio, fin)` que agrupe y cuente por motivo
+- [ ] `app/(protected)/reportes/page.tsx` — sección adicional "Cancelaciones" con gráfica de barras por motivo y tendencia semanal
+
+#### P3.3 — Validación de `salarioDiario` obligatorio
+**Problema:** empleados creados sin `salarioDiario` usarán `salarioBase` fijo como fallback silencioso.
+
+- [ ] `components/nomina/ListaEmpleados.tsx` — advertencia visual en la tabla para empleados activos sin `salarioDiario` configurado (icono amarillo)
+- [ ] `components/nomina/GeneradorNomina.tsx` — al seleccionar empleado sin `salarioDiario`, mostrar banner amarillo "Este empleado usa salario fijo. Configura su salario diario en Empleados para el cálculo real."
+
+---
+
+### ✅ Criterios de aceptación Fase 5.5
+- [x] `totalDias` en nómina siempre coincide con lo registrado en `AsistenciaSemanal` (no hay entrada manual sin alerta)
+- [x] Bono PA solo se aplica sin alerta cuando asistencia es perfecta (7/7 días)
+- [x] `pagarNomina()` es atómica — no puede quedar MovimientoCaja sin su Nómina vinculada
+- [x] Existe reporte de asistencia multi-semana consultable desde `/reportes/asistencia`
+- [x] Existe reporte de nómina desglosada exportable a CSV desde `/reportes/nomina`
+- [x] Préstamos activos tienen visibilidad de saldo total desde `/reportes/prestamos`
 
 ---
 
